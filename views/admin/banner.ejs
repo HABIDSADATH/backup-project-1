@@ -1,0 +1,160 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .table td {
+    padding: 15px;
+    vertical-align: middle;
+  }
+
+  .banner-image {
+    height: 2rem;
+    width: 3rem;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .action-button {
+    min-width: 100px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: white;
+    text-decoration: none;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+  }
+
+  .status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .status-badge.active {
+    background-color: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .status-badge.inactive {
+    background-color: #f8d7da;
+    color: #842029;
+  }
+
+  .delete-icon {
+    color: #dc3545;
+    transition: all 0.3s ease;
+  }
+
+  .delete-icon:hover {
+    color: #bb2d3b;
+    transform: scale(1.1);
+  }
+</style>
+
+<div class="content">
+  <h3 class="page-title">Banner Management</h3>
+
+  <!-- Banners Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%if(locals.data){%>
+            <%for(let i=0;i<data.length;i++){%>
+          <tr>
+            <td>
+              <img src="/uploads/re-image/<%=data[i].image%>" class="banner-image" alt="Banner">
+            </td>
+            <td><%=data[i].title%></td>
+            <td><%=data[i].description%></td>
+            <td>
+              <%if(data[i].startDate < Date.now() && data[i].endDate > Date.now()){%>
+              <span class="status-badge active">Active</span>
+              <%}else{%>
+              <span class="status-badge inactive">Inactive</span>
+              <%}%>
+            </td>
+            <td>
+              <a href="/admin/deleteBanner?id=<%=data[i]._id%>" class="delete-icon" title="Delete Banner">
+                <i class="fas fa-trash"></i>
+              </a>
+            </td>
+          </tr>
+          <%}%>
+          <%}else{%>
+              No Banner Found
+
+            <%}%>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Banner Button -->
+  <div class="button-container">
+    <a href="/admin/addBanner" class="btn btn-primary action-button">
+      <i class="fas fa-plus"></i> Add Banner
+    </a>
+  </div>
+</div>
+
+<%- include("../../views/partials/admin/footer") %>

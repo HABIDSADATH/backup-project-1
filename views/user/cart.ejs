@@ -1,0 +1,349 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    .btn-remove {
+        background-color: #ff4d4d;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-remove:hover {
+        background-color: #e60000;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        transform: scale(1.05);
+    }
+
+    .cart-container {
+        padding: 75px 0;
+    }
+
+    .table-shopping-cart {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table_head th {
+        padding: 15px;
+        text-align: left;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .table_row td {
+        padding: 20px 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .cart-product-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: fit-content;
+    }
+
+    .quantity-btn {
+        padding: 8px 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+        border: none;
+        padding: 5px;
+    }
+
+    .cart-summary {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 8px;
+    }
+
+    .checkout-btn {
+        background-color: #f7444e;
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 5px;
+        width: 100%;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+
+    .checkout-btn:hover {
+        background-color: #d63031;
+    }
+</style>
+
+<body>
+    <!-- Header Include -->
+
+    <!-- Breadcrumb -->
+    <!-- breadcrumb section -->
+    <section class="breadcrumb_section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">cart</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- end breadcrumb section -->
+
+    <!-- Shopping Cart -->
+    <div class="cart-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <table class="table-shopping-cart">
+                        <thead>
+                            <tr class="table_head">
+                                <th>Product</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Size</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           <%let subTotal=0%>
+                            <% cartItems.forEach(item => { %>
+                            <tr class="table_row">
+                                <td>
+                                    <a href="/productDetails?id=<%=item.productId%>">
+                                       <img  src="/uploads/re-image/<%=item.productImages[0]%>" alt="Product" class="cart-product-img">
+                                    </a>
+                                </td>
+                                <td><%= item.productName %></td>
+                                <td>₹<%= item.price %></td>
+                                <td>M</td>
+                                <td>
+                                    <div class="quantity-control">
+                                        <button class="quantity-btn" onclick="decrementQuantity('<%= item.productId %>')">-</button>
+                                        <input type="number" class="quantity-input" id="quantity-<%= item.productId %>" value="<%= item.quantity %>" min="1">
+                                        <button class="quantity-btn" onclick="incrementQuantity('<%= item.productId %>')">+</button>
+                                    </div>
+                                </td>
+                                <td>₹<%= item.totalPrice %></td>
+                                <td>
+                                    <button class="btn-remove" onclick="removeItem('<%=item.productId%>')">Remove</button>
+                                </td>
+                                <%subTotal+=item.totalPrice%>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="cart-summary">
+                        <h4 class="mb-4">Cart Summary</h4>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>total :</span>
+                            <span>₹ <%=subTotal%></span>
+                        </div>
+                        
+                        <a class="checkout-btn" href='/checkout'>
+                            Proceed to Checkout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="editProfileForm">
+                <div class="mb-3">
+                  <label for="editName" class="form-label">Name</label>
+                  <input type="text" class="form-control" id="editName" value="<%=user.name%>" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editPhone" class="form-label">Phone</label>
+                  <input type="tel" class="form-control" id="editPhone" value="<%=user.phone%>" required>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-success" onclick="updateProfile()">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <script>
+        function removeItem(itemId) {
+    const data = { itemId };
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to remove this item?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            console.log('Remove item with ID:', itemId);
+
+            fetch('/removeFromCart', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Removed!',
+                        'Your item has been removed.',
+                        'success'
+                    ).then(() => {
+                        location.reload(); 
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Failed to remove item.',
+                        'error'
+                    );
+                }
+            })
+            .catch((error) => {
+                Swal.fire(
+                    'Error!',
+                    'Something went wrong!',
+                    'error'
+                );
+                console.error('Error:', error);
+            });
+        }
+    });
+}
+
+
+
+function updateTotal(itemId) {
+    const quantityInput = document.getElementById('quantity-' + itemId);
+    const newQuantity = parseInt(quantityInput.value);
+    
+    // Create data object to send
+    const data = {
+        productId: itemId,
+        quantity: newQuantity
+    };
+
+    // Send AJAX request to update quantity
+    fetch('/updateCartQuantity', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated totals
+            location.reload();
+        } else {
+            // Show error message
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Failed to update quantity',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            // Revert the quantity if update failed
+            quantityInput.value = data.currentQuantity || quantityInput.value;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'Something went wrong while updating the quantity',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+// Enhanced increment function with validation
+function incrementQuantity(itemId) {
+    const input = document.getElementById('quantity-' + itemId);
+    const currentValue = parseInt(input.value);
+    const maxValue = 10; // You can adjust this maximum value
+
+    if (currentValue < maxValue) {
+        input.value = currentValue + 1;
+        updateTotal(itemId);
+    } else {
+        Swal.fire({
+            title: 'Maximum Limit Reached',
+            text: 'You cannot add more than ' + maxValue + ' items',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+// Enhanced decrement function with validation
+function decrementQuantity(itemId) {
+    const input = document.getElementById('quantity-' + itemId);
+    const currentValue = parseInt(input.value);
+
+    if (currentValue > 1) {
+        input.value = currentValue - 1;
+        updateTotal(itemId);
+    } else {
+        Swal.fire({
+            title: 'Minimum Limit Reached',
+            text: 'Quantity cannot be less than 1',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+
+        
+    </script>
+
+    
+
+<%- include("../../views/partials/user/footer") %>

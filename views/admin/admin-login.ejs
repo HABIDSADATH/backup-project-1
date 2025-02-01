@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Log In</title>
+    <!-- Link to Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f7444e;
+        }
+
+        h2 {
+            color: #f7444e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #000;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            background-color: #f9f9f9;
+        }
+
+        input[type="submit"] {
+            background-color: #f7444e;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #d63a3f;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .error-message-back {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .back-link a {
+            color: black;
+            text-decoration: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Admin Log In</h2>
+        
+        <form id="adminLoginForm" action="/admin/login" method="post">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="famms@gmail.com">
+            <div id="error1" class="error-message"></div>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" value="h1111111">
+            <div id="error2" class="error-message"></div>
+
+            <% if (locals.message) { %>
+                <div class="error-message-back"><%= message %></div>
+            <% } %>
+
+            <input type="submit" value="Log In">
+        </form>
+
+        <div class="back-link">
+            <a href="/login" style="color: black; text-decoration: none;">Back to User Login</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', function(event) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            
+            if (!email.includes('@')) {
+                document.getElementById('error1').style.display = 'block';
+                document.getElementById('error1').textContent = 'Please enter a valid email address.';
+                event.preventDefault();
+            } else {
+                document.getElementById('error1').style.display = 'none';
+            }
+            
+            
+            if (password.length < 6) {
+                document.getElementById('error2').style.display = 'block';
+                document.getElementById('error2').textContent = 'Password must be at least 6 characters.';
+                event.preventDefault();
+            } else {
+                document.getElementById('error2').style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>

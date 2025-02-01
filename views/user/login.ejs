@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f7444e;
+        }
+
+        h2 {
+            color: #f7444e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #000;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            background-color: #f9f9f9;
+        }
+
+        input[type="submit"] {
+            background-color: #f7444e;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #d63a3f;
+        }
+
+        .google-btn {
+            background-color: #fff;
+            border: 1px solid #4285f4; 
+            color: #4285f4;
+            width: 94%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        .google-btn:hover {
+            background-color: #f1f1f1;
+        }
+
+        .google-btn svg {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .error-message-back {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .forgot-pass:hover{
+            text-decoration: underline;
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-container input {
+            width: 100%;
+            padding-right: 40px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Log In</h2>
+        
+        <form id="loginForm" action="/login" method="post">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="test@gmail.com">
+            <div id="error1" class="error-message"></div>
+
+            <label for="password">Password</label>
+            <div class="password-container">
+                <input type="password" id="password" name="password" value="h1111111">
+                <span class="material-icons toggle-password" onclick="togglePassword('password')">visibility_off</span>
+            </div>
+            <div id="error2" class="error-message"></div>
+
+            <% if (locals.message) { %>
+                <div class="error-message-back"><%=message%></div>
+            <% } %>
+
+            <input type="submit" value="Log In">
+        </form>
+        <div style="text-align: center; margin-top: 5px; margin-bottom:15px ;" class="forgot-pass">
+            <a href="/forgot-password" style="color: #f7444e; text-decoration: none;">forgot password</a>
+        </div>
+        <!-- <a href="#" class="google-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.14 0 5.67 1.08 7.71 2.85l5.76-5.76C33.95 3.35 29.27 1.5 24 1.5 14.64 1.5 6.72 7.6 3.76 15.76l6.64 5.22C12.75 14.11 17.96 9.5 24 9.5z"/><path fill="#34A853" d="M46.24 24.5c0-1.65-.14-3.24-.41-4.76H24v9.5h12.5c-1.15 3.55-3.27 6.45-6.23 8.38l7.61 5.98c4.45-4.12 7.36-10.2 7.36-18.12z"/><path fill="#FBBC05" d="M10.4 28.78c-1.07-3.22-1.07-6.74 0-9.96l-6.64-5.22C1.14 17.01 0 20.43 0 24s1.14 6.99 3.76 10.4l6.64-5.22z"/><path fill="#EA4335" d="M24 46.5c5.27 0 9.95-1.75 13.66-4.74l-7.61-5.98c-2.14 1.44-4.86 2.3-6.82 2.3-6.04 0-11.25-4.61-12.6-10.76l-6.64 5.22C6.72 40.4 14.64 46.5 24 46.5z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            Sign Up with Google
+        </a> -->
+
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="/signup" style="color: black; text-decoration: none;">Don't have an account? Sign Up</a>
+        </div>
+
+        
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            
+            if (!email.includes('@')) {
+                document.getElementById('error1').style.display = 'block';
+                document.getElementById('error1').textContent = 'Please enter a valid email address.';
+                event.preventDefault();
+            } else {
+                document.getElementById('error1').style.display = 'none';
+            }
+            
+            
+            if (password.length < 6) {
+                document.getElementById('error2').style.display = 'block';
+                document.getElementById('error2').textContent = 'Password must be at least 6 characters.';
+                event.preventDefault();
+            } else {
+                document.getElementById('error2').style.display = 'none';
+            }
+        });
+
+
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const icon = passwordInput.nextElementSibling;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+
+
+    </script>
+
+</body>
+</html>

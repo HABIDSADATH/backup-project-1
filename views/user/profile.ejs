@@ -1,0 +1,653 @@
+
+
+
+
+
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
+<style>
+/* Match the home page color scheme and styling */
+:root {
+  --primary-color: #f7444e;
+  --secondary-color: #002c3e;
+  --text-color: #002c3e;
+  --background-light: #f8f9fa;
+}
+
+.main {
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color);
+  background-color: var(--background-light);
+}
+
+.dashboard-menu {
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.dashboard-menu .nav-link {
+  color: var(--text-color);
+  padding: 12px 20px;
+  margin: 5px 0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.dashboard-menu .nav-link:hover,
+.dashboard-menu .nav-link.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 20px;
+  border: none;
+}
+
+.card-body {
+  padding: 30px;
+}
+
+.btn-success {
+  background-color: var(--primary-color);
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #d63a42;
+  transform: translateY(-2px);
+}
+
+
+
+/* Dashboard Menu Icon Styles */
+.dashboard-menu .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #333;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+.dashboard-menu .nav-link i {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.dashboard-menu .nav-link:hover,
+.dashboard-menu .nav-link.active {
+    background: #f7444e;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Table styling */
+.table {
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.table thead th {
+  border: none;
+  background-color: #f8f9fa;
+  padding: 15px;
+  font-weight: 600;
+}
+
+.table tbody td {
+  padding: 15px;
+  vertical-align: middle;
+  background-color: white;
+  border: none;
+}
+
+/* Profile card specific styling */
+.card-green {
+  background-color: white;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  margin: 0 auto 20px;
+  border: 5px solid var(--primary-color);
+}
+
+/* Wallet section styling */
+.wallet-amount {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+/* Address section styling */
+.address-card {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.address-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-menu {
+    margin-bottom: 20px;
+  }
+  
+  .card-body {
+    padding: 20px;
+  }
+  
+  .wallet-amount {
+    font-size: 2rem;
+  }
+}
+</style>
+
+<main class="main">
+  <!-- breadcrumb section -->
+<section class="breadcrumb_section">
+  <div class="container">
+     <div class="row">
+        <div class="col-12">
+           <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                 <li class="breadcrumb-item"><a href="/">Home</a></li>
+                 
+                 <li class="breadcrumb-item active" aria-current="page">profile</li>
+              </ol>
+           </nav>
+        </div>
+     </div>
+  </div>
+</section>
+<!-- end breadcrumb section -->
+
+  <section class="pt-5 pb-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-10 m-auto">
+          <div class="row">
+            <!-- Left sidebar -->
+            <div class="col-md-4">
+              <div class="dashboard-menu">
+                <ul class="nav flex-column" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="true">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="false">
+                            <i class="fas fa-map-marker-alt"></i> My Address
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false">
+                            <i class="fas fa-shopping-bag"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="wallet-tab" data-bs-toggle="tab" href="#track-orders" role="tab" aria-controls="track-orders" aria-selected="false">
+                            <i class="fas fa-wallet"></i> Wallet Status
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="history-tab" data-bs-toggle="tab" href="#wallet-history" role="tab" aria-controls="wallet-history" aria-selected="false">
+                            <i class="fas fa-history"></i> Wallet History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="referral-tab" data-bs-toggle="tab" href="#referal" role="tab" aria-controls="referal" aria-selected="false">
+                            <i class="fas fa-user-friends"></i> Referrals
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+          </div>
+
+            <!-- Right content area -->
+            <div class="col-md-8">
+              <div class="tab-content dashboard-content">
+                <!-- Dashboard tab -->
+
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                  <div class="card">
+                      <!-- Your existing dashboard content -->
+                      <div class="tab-pane fade show active" id="dashboard">
+                        <div class="card">
+                          <div class="card-header">
+                            <h5 class="mb-0">profile</h5>
+                            <button onclick="openEditModal()" class="btn btn-success btn-sm position-absolute" style="top: 1rem; right: 1rem;">
+                              <i class="fas fa-edit me-2"></i>Edit Profile
+                            </button>
+                          </div>
+                          <div class="card-body text-center">
+                            <div class="profile-image" >
+                              <!-- <img src="/api/placeholder/120/120" alt="Profile" class="img-fluid rounded-circle"> -->
+                            </div>
+                            <h4 class="mb-3"><%=user.name%></h4>
+                            <p class="mb-2"><strong>Phone:</strong> <%=user.phone%></p>
+                            <p class="mb-4"><strong>Email:</strong> <%=user.email%></p>
+                            <div class="d-flex justify-content-center gap-3" style="gap: 10px;">
+                              <a href="/change-email" class="btn btn-success">Change Email</a>
+                              <a href="/change-password" class="btn btn-success">Change Password</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+
+              
+                    <!-- Your address content -->
+
+                    <div class="tab-pane fade" id="address">
+                      <div class="row">
+                        <%if(userAddress){%>
+                          <%userAddress.address.forEach((address)=>{%>
+                        <div class="col-lg-6">
+                          <div class="card mb-3">
+                            <div class="card-header">
+                              <h5 class="mb-0"><%=address.addressType%></h5>
+                            </div>
+                            <div class="card-body">
+                              
+                                <address>
+                                    <%=address.name%><br>
+                                  <%=address.city%> <br>
+                                  <%=address.landMark%><br>
+                                  <%=address.state%> <br>
+                                </address>
+                                <p><%=address.pincode%></p>
+                                <p><%=address.phone%></p>
+                                <p><%=address.altPhone%></p>
+                                <div class="d-flex justify-content-between mt-3">
+                                  <a href="/editAddress?id=<%=address._id%>" class="btn btn-success btn-sm">Edit</a>
+                                  <a href="/deleteAddress?id=<%=address._id%>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                                </div>
+                                
+                    
+                            </div>
+                          </div>
+                        </div>
+                        <%})%><%}else{%>
+                        
+                          <p>No address added yet</p>
+                          <%}%>
+                        
+                        <div class="col-lg-6">
+                          <div class="card mb-3">
+                            <div class="card-header">
+                              <h5 class="mb-0">add new address</h5>
+                            </div>
+                            <div class="card-body">
+                              <p>Add a different shipping address</p>
+                              <a href="/addAddress" class="btn btn-success">Add New Address</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+      
+
+
+<!-- Wallet Status Tab -->
+<div class="tab-pane fade" id="track-orders">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Wallet Balance</h5>
+    </div>
+    <div class="card-body text-center">
+      <div class="wallet-amount">
+        ₹<%= wallet.balance %> 
+      </div>
+      <p class="mb-4">Available Balance</p>
+      <button type="button" class="btn btn-success" onclick="addMoney()">
+        <i class="fas fa-plus-circle me-2"></i>Add Money
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Wallet History Tab -->
+<div class="tab-pane fade" id="wallet-history">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Transaction History</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Transaction ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (wallet.transactions && wallet.transactions.length > 0) { %>
+              <% wallet.transactions.forEach(transaction => { %>
+                <tr>
+                  <td><%= new Date(transaction.createdAt).toLocaleDateString() %></td>
+                  <td><%= transaction.transactionId %></td>
+                  <td><%= transaction.type %></td>
+                  <td>₹<%= transaction.amount %></td>
+                  <td>
+                    <span class="badge <%= transaction.status === 'completed' ? 'bg-success' : (transaction.status === 'pending' ? 'bg-warning' : 'bg-danger') %>">
+                      <%= transaction.status %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="text-center">No transactions found</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Referral Tab -->
+<div class="tab-pane fade" id="referal">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Refer & Earn</h5>
+    </div>
+    <div class="card-body">
+      <div class="text-center mb-4">
+        <i class="fas fa-gift fa-3x text-primary mb-3"></i>
+        <h4>Invite Friends & Earn Rewards</h4>
+        <p class="text-muted">Share your referral link with friends and earn ₹100 when they make their first purchase!</p>
+      </div>
+      
+      <div class="referral-link-box p-3 bg-light rounded mb-4">
+        <p class="mb-2">Your Referral Link:</p>
+        <div class="input-group">
+          <input type="text" class="form-control" value=" referralLink" id="referralLink" readonly>
+          <button class="btn btn-success" onclick="copyReferralLink()">
+            <i class="fas fa-copy"></i> Copy
+          </button>
+        </div>
+      </div>
+      
+      <div class="row text-center">
+        <div class="col-md-6 mb-3">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="text-primary">₹0 </h3>
+              <p class="mb-0">Total Earned</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="text-success">0</h3>
+              <p class="mb-0">Successful Referrals</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+                <!-- Orders tab -->
+
+                <div class="tab-pane fade" id="orders">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5 class="mb-0">Your Orders</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Order ID</th>
+                              <th>Products</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                              <th>Total</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% 
+                            // Group orders by orderId
+                            const groupedOrders = {};
+                            orderData.forEach(order => {
+                              if (!groupedOrders[order.orderId]) {
+                                groupedOrders[order.orderId] = {
+                                  orderId: order.orderId,
+                                  invoiceDate: order.invoiceDate,
+                                  status: order.status,
+                                  finalAmount: 0,
+                                  products: [],
+                                  _id: order._id
+                                };
+                              }
+                              groupedOrders[order.orderId].products.push(order.productDetails);
+                              groupedOrders[order.orderId].finalAmount += order.finalAmount;
+                            });
+                            %>
+                
+                            <% Object.values(groupedOrders).forEach(order => { %>
+                              <tr>
+                                <td><%= order.orderId.slice(-6) %></td>
+                                <td>
+                                  <div class="d-flex gap-2">
+                                    <% order.products.forEach(product => { %>
+                                      <a href="/order/<%=order._id%>">
+                                        <img src="/uploads/re-image/<%=product.productImages[0]%>" 
+                                             alt="Product Image" 
+                                             style="width: 50px; height: auto;"
+                                             data-bs-toggle="tooltip" 
+                                             title="<%=product.name%>">
+                                      </a>
+                                    <% }) %>
+                                  </div>
+                                </td>
+                                <td><%= new Date(order.invoiceDate).toLocaleDateString() %></td>
+                                <td><%= order.status %></td>
+                                <td>₹<%= order.finalAmount %></td>
+                                <td>
+                                  <% if (order.status === 'pending' || order.status === 'processing') { %>
+                                    <form id="cancelOrderForm-<%= order._id %>" action="/cancel-order/<%= order._id %>" method="POST" style="display:inline;">
+                                      <button type="button" class="btn btn-danger btn-sm cancelOrderButton" data-order-id="<%= order._id %>">Cancel Order</button>
+                                    </form>
+                                  <% } else { %>
+                                    <span class="text-muted"><%=order.status%></span>
+                                  <% } %>
+                                </td>
+                              </tr>
+                            <% }) %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+               
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="editProfileModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 position-relative">
+        <h5 class="modal-title">Edit Profile</h5>
+        <button type="button" class="btn-close position-absolute" style="top: 1rem; right: 1rem; border: none; background-color: var(--primary-color); color: white; border-radius: 5px;" data-bs-dismiss="modal">X</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProfileForm" action="/update-profile" method="PUT">
+          <div class="mb-4">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" id="name" class="form-control" value="<%=user.name%>">
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" id="phone" class="form-control" value="<%=user.phone%>">
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const editModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+const openEditModal = () => editModal.show();
+
+document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  console.log(Object.fromEntries(formData));
+  console.log(formData)
+  try {
+    const response = await fetch('http://localhost:3000/update-profile', {
+      method: 'PUT',
+      headers:{
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(Object.fromEntries(formData)
+    ) 
+    });
+    
+    if (response.ok) {
+      editModal.hide();
+      // location.reload();
+    } else {
+      
+      const errorData = await response.json();
+      console.error('Error:', errorData);
+    }
+  } catch (error) {
+    console.error('Network Error:', error);
+  }
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const cancelButtons = document.querySelectorAll('.cancelOrderButton');
+
+  cancelButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      const orderId = this.getAttribute('data-order-id');
+      const form = document.getElementById(`cancelOrderForm-${orderId}`);
+      
+      Swal.fire({
+        title: 'Cancel Order',
+        html: `
+          <textarea id="cancellationReason" class="swal2-textarea" placeholder="Please provide a reason for cancellation" rows="4"></textarea>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Confirm Cancel',
+        preConfirm: () => {
+          const reason = document.getElementById('cancellationReason').value;
+          if (!reason) {
+            Swal.showValidationMessage('Please provide a cancellation reason');
+            return false;
+          }
+          return reason;
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const cancellationReason = result.value;
+          
+          fetch(form.action, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              cancellationReason: cancellationReason 
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status) {
+              Swal.fire(
+                'Cancelled!',
+                data.message,
+                'success'
+              ).then(() => {
+                location.reload(); 
+              });
+            } else {
+              Swal.fire(
+                'Error!',
+                data.message,
+                'error'
+              );
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire(
+              'Error!',
+              'Internal server error',
+              'error'
+            );
+          });
+        }
+      });
+    });
+  });
+});
+  </script>
+
+<%- include("../../views/partials/user/footer") %>

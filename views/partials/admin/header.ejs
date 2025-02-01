@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>famms</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+  <style>
+    :root {
+      --primary: #f7444e;
+      --primary-hover: #ff5e64;
+      --dark: #2d3436;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f8f9fa;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 250px;
+      background-color: white;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      background-color: var(--primary);
+      color: white;
+      text-align: center;
+    }
+
+    .sidebar-header h4 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .sidebar a {
+      color: var(--dark);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background-color: rgba(247, 68, 78, 0.1);
+      border-left: 3px solid var(--primary);
+      color: var(--primary);
+      transform: translateX(5px);
+    }
+
+    .sidebar a i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Header Styles */
+    .header {
+      background-color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 250px;
+      height: 70px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .website-name {
+      color: var(--primary);
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    /* Profile Dropdown */
+    .admin-profile {
+      position: relative;
+    }
+
+    .profile-dropdown {
+      background: white;
+      border: none;
+      color: var(--dark);
+      padding: 8px 15px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .profile-dropdown:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+
+    .profile-dropdown img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+    }
+
+    /* Content Area */
+    .content {
+      padding: 90px 30px 30px;
+      margin-left: 250px;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+      transition: all 0.3s ease;
+    }
+
+    /* Mobile Toggle Button */
+    .toggle-sidebar-btn {
+      display: none;
+      background: white;
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .toggle-sidebar-btn:hover {
+      transform: rotate(90deg);
+      background-color: var(--primary);
+      color: white;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .header {
+        left: 0;
+      }
+
+      .content {
+        margin-left: 0;
+      }
+
+      .toggle-sidebar-btn {
+        display: block;
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .sidebar.show ~ .content {
+        transform: translateX(250px);
+      }
+    }
+
+    /* Animation for menu items */
+    .sidebar a {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: var(--primary);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar a:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* Pulse animation for notifications */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      padding: 4px 8px;
+      font-size: 12px;
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="toggle-sidebar-btn" id="toggleSidebarBtn">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h4>famms</h4>
+    </div>
+    <a href="/admin/"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="/admin/users"><i class="fas fa-users"></i> Customers</a>
+    <a href="/admin/category"><i class="fas fa-tags"></i> Category</a>
+    <a href="/admin/brands"><i class="fas fa-bookmark"></i> Brands</a>
+    <a href="/admin/addProducts"><i class="fas fa-plus-circle"></i> Add Product</a>
+    <a href="/admin/products"><i class="fas fa-box"></i> Products</a>
+    <a href="/admin/banner"><i class="fas fa-gift"></i> Banners</a>
+    <a href="/admin/coupon"><i class="fas fa-image"></i> Coupons</a>
+    <a href="/admin/orders" style="position: relative">
+      <i class="fas fa-shopping-cart"></i> Orders
+      <span class="notification-badge">3</span>
+    </a>
+    <a href="/admin/sales-report"><i class="fas fa-file"></i> Sales Report</a>
+  </div>
+
+  <div class="header">
+    <div class="website-name">famms</div>
+    <div class="admin-profile dropdown"> <!-- Added dropdown class -->
+        <button class="profile-dropdown" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <span>Admin</span>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown"> <!-- Added aria-labelledby and dropdown-menu-end -->
+            <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+</div>
+
+  <script>
+    $(document).ready(function() {
+      $('#toggleSidebarBtn').click(function() {
+        $('#sidebar').toggleClass('collapsed');
+        $('#header').toggleClass('expanded');
+        $('#content').toggleClass('expanded');
+      });
+
+      // Close sidebar when clicking outside on mobile
+      $(document).on('click', function(e) {
+        if ($(window).width() <= 768) {
+          if (!$(e.target).closest('.sidebar').length && !$(e.target).closest('.toggle-sidebar-btn').length) {
+            $('#sidebar').removeClass('show');
+          }
+        }
+      });
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.15.10/dist/sweetalert2.all.min.js"></script>
+

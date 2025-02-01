@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <title>Order Details</title>
+  
+  
+  <link rel="stylesheet" type="text/css" href="/css/bootstrap.css" />
+  
+  <link href="/css/font-awesome.min.css" rel="stylesheet" />
+  
+  <link href="/css/style.css" rel="stylesheet" />
+  
+  <link href="/css/responsive.css" rel="stylesheet" />
+  
+  
+</head>
+
+<body class="sub_page">
+  <div class="hero_area">
+    <%- include("../../views/partials/user/header") %>
+  </div>
+
+<style>
+    .order-details-container {
+        padding: 75px 0;
+    }
+
+    .order-info-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+
+    .order-header {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+
+    .order-id {
+        color: #f7444e;
+        font-weight: 600;
+    }
+
+    .order-status {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-processing { background: #cce5ff; color: #004085; }
+    .status-shipped { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+
+    .product-card {
+        display: flex;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .product-card:last-child {
+        border-bottom: none;
+    }
+
+    .product-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .product-details {
+        margin-left: 20px;
+        flex-grow: 1;
+    }
+
+    .price-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .price-row:last-child {
+        margin-bottom: 0;
+        padding-top: 12px;
+        border-top: 1px solid #dee2e6;
+        font-weight: 600;
+    }
+
+    .tracking-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .step-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .step-icon.active {
+        background: #f7444e;
+        color: white;
+    }
+
+    .step-content {
+        flex-grow: 1;
+    }
+
+    
+    .hero_area.sub_page {
+        height: auto;
+    }
+
+    .breadcrumb_section {
+        background-color: #f8f9fa;
+        padding: 20px 0;
+        margin-bottom: 30px;
+    }
+
+    .breadcrumb {
+        background: transparent;
+        margin: 0;
+        padding: 0;
+    }
+
+    .breadcrumb-item a {
+        color: #f7444e;
+    }
+
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+</style>
+
+<!-- Breadcrumb -->
+<section class="breadcrumb_section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Order Details</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Order Details Section -->
+<div class="order-details-container">
+    <div class="container">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+                <!-- Order Header -->
+                <div class="order-info-card">
+                    
+                <div class="order-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Order #<span class="order-id"><%= order.orderId %></span></h5>
+                            <p class="text-muted mb-0">Placed on <%= new Date(order.createdOn).toLocaleDateString() %></p>
+                        </div>
+                        <span class="order-status status-<%= order.status.toLowerCase() %>">
+                            <%= order.status %>
+                        </span>
+                    </div>
+                    <% if (order.status.toLowerCase() === 'delivered') { %>
+                        <button id="returnButton" class="btn btn-danger mt-3">Return Product</button>
+                    <% } %>
+                    
+                    <div id="returnReasonSection" style="display: none;" class="mt-3">
+                        <textarea id="returnReason" class="form-control" rows="3" placeholder="Enter your reason for return..."></textarea>
+                        <button id="submitReturn" class="btn btn-primary mt-2">Submit Return Request</button>
+                    </div>
+                </div>
+
+                    <!-- Order Items -->
+                    <div class="order-items">
+                        <h6 class="mb-4">Order Items</h6>
+                        <% order.orderItems.forEach(item => { %>
+                            <div class="product-card">
+                                <img src="/uploads/re-image/<%= item.product.productImages[0] %>" 
+                                     alt="<%= item.product.productName %>" 
+                                     class="product-image">
+                                <div class="product-details">
+                                    <h6><%= item.product.productName %></h6>
+                                    <p class="mb-1">Quantity: <%= item.quantity %></p>
+                                    <p class="mb-0">₹<%= item.price %></p>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="order-info-card">
+                    <h6 class="mb-3">Delivery Address</h6>
+                    <div class="delivery-address">
+                        <p class="mb-1"><strong><%= address.name %></strong></p>
+                        <p class="mb-1"><%= address.phone %></p>
+                        <p class="mb-1">
+                            <%= address.city %>,
+                            <%= address.landMark %>,
+                            <%= address.state %> - <%= address.pincode %>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Price Summary -->
+                <div class="order-info-card">
+                    <h6 class="mb-3">Price Details</h6>
+                    <div class="price-details">
+                        <div class="price-row">
+                            <span>Total Price</span>
+                            <span>₹<%= order.totalPrice %></span>
+                        </div>
+                        <% if(order.discount > 0) { %>
+                            <div class="price-row">
+                                <span>Discount</span>
+                                <span>-₹<%= order.discount %></span>
+                            </div>
+                        <% } %>
+                        <div class="price-row">
+                            <span>Delivery Charges</span>
+                            <span>₹49</span>
+                        </div>
+                        <div class="price-row">
+                            <strong>Total Amount</strong>
+                            <strong>₹<%= order.finalAmount %></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="order-info-card">
+                    <h6 class="mb-3">Order Status</h6>
+                    <div class="tracking-info">
+                        <% 
+                        const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered']
+                        const currentIndex = statusOrder.findIndex(status => 
+                            status.toLowerCase() === order.status.toLowerCase()
+                        );
+                        %>
+                        
+                        <% statusOrder.forEach((status, index) => { %>
+                            <div class="tracking-step">
+                                <div class="step-icon <%= index <= currentIndex ? 'active' : '' %>">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <p class="mb-0 <%= index <= currentIndex ? 'fw-bold' : 'text-muted' %>">
+                                        <%= status %>
+                                    </p>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<%- include("../../views/partials/user/footer") %>
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+<script src="/js/bootstrap.js"></script>
+<script src="/js/custom.js"></script>
+<script>
+    document.getElementById('returnButton').addEventListener('click', function () {
+        
+        const returnReasonSection = document.getElementById('returnReasonSection');
+        returnReasonSection.style.display = returnReasonSection.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('submitReturn').addEventListener('click', function () {
+        const returnReason = document.getElementById('returnReason').value;
+
+        if (!returnReason) {
+            alert('Please enter a reason for return.');
+            return;
+        }
+
+        // Send the return request to the server
+        fetch(`/orders/<%= order.orderId %>/return`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: returnReason }),
+            })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Return request submitted successfully!');
+                window.location.reload(); // Reload the page to reflect the updated status
+            } else {
+                alert('Failed to submit return request. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+</script>
+
+</body>
+</html>

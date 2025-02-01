@@ -1,0 +1,325 @@
+
+
+
+
+
+<%- include("../../views/partials/user/header") %>
+<style>
+   /* Search Bar */
+   .search-container {
+     max-width: 1200px;
+     margin: 0 auto;
+     padding: 20px 15px;
+   }
+
+   .search-form {
+     background: #000;
+     border-radius: 4px;
+     padding: 8px 16px;
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     transition: all 0.3s ease;
+     height: 40px;
+   }
+
+   .search-input {
+     flex: 1;
+     border: none;
+     background: transparent;
+     color: white;
+     outline: none;
+     font-size: 16px;
+     padding: 8px 0;
+   }
+
+   .search-input::placeholder {
+     color: rgba(255, 255, 255, 0.7);
+   }
+
+   .search-button {
+     background: transparent;
+     border: none;
+     color: white;
+     cursor: pointer;
+     padding: 8px;
+     display: flex;
+     align-items: center;
+     transition: transform 0.2s ease;
+   }
+
+   .search-button:hover {
+     transform: scale(1.1);
+   }
+
+   .search-icon {
+     font-size: 20px;
+   }
+
+   /* Main Layout */
+   .product-page-container {
+     display: flex;
+     max-width: 1200px;
+     margin: 0 auto;
+     padding: 20px 15px;
+     gap: 20px;
+   }
+
+   /* Filter Section */
+   .filter-section {
+     width: 250px;
+     background: #f8f9fa;
+     padding: 20px;
+     border-radius: 8px;
+     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+     height: 100%;
+   }
+
+   .filter-section h3 {
+     margin-bottom: 15px;
+     font-size: 18px;
+     color: #002c3e;
+   }
+
+   .filter-section table {
+     width: 100%;
+   }
+
+   .filter-section table td {
+     padding: 8px 0;
+   }
+
+   .filter-section table a {
+     color: #002c3e;
+     text-decoration: none;
+     transition: color 0.3s;
+   }
+
+   .filter-section table a:hover {
+     color: #f7444e;
+   }
+
+   /* Product Grid */
+   .product-grid {
+     flex: 1;
+     display: grid;
+     grid-template-columns: repeat(3, 1fr);
+     gap: 20px;
+   }
+
+   .product-card {
+     background: #fff;
+     border-radius: 8px;
+     overflow: hidden;
+     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+     transition: transform 0.3s;
+   }
+
+   .product-card:hover {
+     transform: translateY(-5px);
+   }
+
+   .product-card .img-box {
+     width: 100%;
+     height: 250px;
+     overflow: hidden;
+   }
+
+   .product-card .img-box img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+   }
+
+   .product-card .detail-box {
+     padding: 15px;
+     text-align: center;
+   }
+
+   .product-card .detail-box h5 {
+     font-size: 18px;
+     margin-bottom: 10px;
+     color: #002c3e;
+   }
+
+   .product-card .detail-box h6 {
+     font-size: 16px;
+     color: #f7444e;
+     font-weight: 600;
+   }
+
+   /* Pagination */
+   .pagination-container {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 10px;
+     margin-top: 30px;
+   }
+
+   .pagination-btn {
+     padding: 8px 16px;
+     background-color: #333;
+     color: white;
+     border-radius: 4px;
+     text-decoration: none;
+     transition: background-color 0.3s ease;
+   }
+
+   .pagination-btn:hover {
+     background-color: #555;
+   }
+
+   .current-page {
+     padding: 8px 16px;
+     background-color: #f7444e;
+     color: white;
+     border-radius: 4px;
+   }
+   
+  .wishlist-icon { 
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 20px;
+    transition: all 0.3s;
+   }
+
+  .wishlist-icon:hover {
+    color: #f7444e; 
+   }
+
+  .wishlist-icon.active {
+    color: #f7444e; 
+   }
+</style>
+
+<!-- Search Bar -->
+<div class="search-container">
+  <form class="search-form" method="POST" action="/search">
+    <input type="text" name="search" class="search-input" placeholder="Search..." style="padding-top: 25px;">
+    <button type="submit" class="search-button">
+      <i class="zmdi zmdi-search search-icon"></i>
+    </button>
+  </form>
+</div>
+
+<!-- Main Product Page -->
+<div class="product-page-container">
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <h3>Filters</h3>
+    <table>
+      <tr>
+        <td><strong>Categories</strong></td>
+      </tr>
+      <% for (let i = 0; i < category.length; i++) { %>
+        <tr>
+          <td><a href="/filter?category=<%=category[i]._id%>"><%=category[i].name%></a></td>
+        </tr>
+      <% } %>
+      <tr>
+        <td><strong>Sort By</strong></td>
+      </tr>
+      <tr>
+        <td><a href="/filterPrice?sort=asc">Price: Low to High</a></td>
+      </tr>
+      <tr>
+        <td><a href="/filterPrice?sort=desc">Price: High to Low</a></td>
+      </tr>
+      <tr>
+        <td><a href="/alphabeticSort?order=asc">Name: A to Z</a></td>
+      </tr>
+      <tr>
+        <td><a href="/alphabeticSort?order=desc">Name: Z to A</a></td>
+      </tr>
+      <tr>
+        <td><a href="/latestSort">Latest</a></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="product-grid">
+    <%if(products.length === 0) {%>
+      <h4>No products found!!</h4>
+      <%}else{%>
+    <% for (let i = 0; i < products.length; i++) { %>
+      <div class="product-card">
+        <div class="img-box">
+          <div class="wishlist-icon" onclick="addToWishlist('<%=products[i]._id%>')">
+            <i class="fa fa-heart"></i>
+          </div>
+          <a href="/productDetails?id=<%=products[i]._id%>" class="option1">
+            <img src="/uploads/re-image/<%=products[i].productImages[0]%>" alt="<%=products[i].productName%>">
+          </a>
+        </div>
+        <div class="detail-box">
+          <h5><%=products[i].productName%></h5>
+          <h6><%=products[i].salePrice%></h6>
+        </div>
+      </div>
+    <% } %>
+    <%}%>
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+  <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>" class="pagination-btn prev-btn"><i class="fas fa-chevron-left"></i></a>
+  <% } %>
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <% if (i === currentPage) { %>
+      <span class="pagination-btn current-page"><%= i %></span>
+    <% } else { %>
+      <a href="?page=<%= i %>" class="pagination-btn"><%= i %></a>
+    <% } %>
+  <% } %>
+  <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>" class="pagination-btn next-btn"><i class="fas fa-chevron-right"></i></a>
+  <% } %>
+</div>
+
+<%- include("../../views/partials/user/footer") %>
+  <script>
+   function toggleFilter() {
+     const dropdown = document.getElementById('filterDropdown');
+     dropdown.classList.toggle('show');
+   }
+   
+   
+   window.onclick = function(event) {
+     if (!event.target.matches('.filter-btn')) {
+       const dropdowns = document.getElementsByClassName('filter-dropdown');
+       for (let dropdown of dropdowns) {
+         if (dropdown.classList.contains('show')) {
+           dropdown.classList.remove('show');
+         }
+       }
+     }
+   }
+
+   function addToWishlist(productId){
+    
+    $.ajax({
+      url: '/addToWishlist',
+      type: 'POST',
+      data: {
+        productId: productId
+      },
+      success: function(response){
+        if(response.status){
+          alert('Product added to wishlist');
+        }else{
+          alert('Product already in wishlist');
+        }
+      }
+    });
+
+   }
+   </script>
+

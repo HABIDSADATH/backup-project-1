@@ -1,0 +1,214 @@
+
+
+
+
+
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* Match the home page color scheme and styling */
+:root {
+  --primary-color: #f7444e;
+  --secondary-color: #002c3e;
+  --text-color: #002c3e;
+  --background-light: #f8f9fa;
+}
+
+.main {
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color);
+  background-color: var(--background-light);
+}
+
+.card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.card-header {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 20px;
+  border: none;
+}
+
+.card-body {
+  padding: 30px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #d63a42;
+  transform: translateY(-2px);
+}
+
+.error-message {
+  color: red;
+  font-size: 0.875em;
+  margin-top: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 20px;
+  }
+}
+</style>
+
+<main class="main">
+  <!-- breadcrumb section -->
+  <section class="breadcrumb_section">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item"><a href="/profile">Profile</a></li>
+              <li class="breadcrumb-item"><a href="/profile">My Address</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Add Address</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- end breadcrumb section -->
+  <div class="container mt-4">
+    <h3 class="mt-3" style="color: #046963; margin-bottom:70px">Edit User Address</h3>
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Edit Address</h5>
+      </div>
+      <div class="card-body">
+        <form id="addressForm" method="POST" action="" class="border-0 p-3">
+          <div class="row mb-3">
+            <div class="form-group col-md-4">
+              <label for="addressType">Address Type:</label>
+              <input type="text" class="form-control border-3" id="addressType" name="addressType" value="<%=address.addressType%>" >
+              <div class="error-message" id="addressTypeError"></div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="name">Name:</label>
+              <input type="text" class="form-control border-3" id="name" name="name" value="<%=address.name%>" >
+              <div class="error-message" id="nameError"></div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="city">City:</label>
+              <input type="text" class="form-control border-3" id="city" name="city" value="<%=address.city%>" >
+              <div class="error-message" id="cityError"></div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="form-group col-md-4">
+              <label for="landMark">Landmark:</label>
+              <input type="text" class="form-control border-3" id="landMark" name="landMark" value="<%=address.landMark%>">
+              <div class="error-message" id="landMarkError"></div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="state">State:</label>
+              <input type="text" class="form-control border-3" id="state" name="state" value="<%=address.state%>" >
+              <div class="error-message" id="stateError"></div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="pincode">Pincode:</label>
+              <input type="number" class="form-control border-3" id="pincode" name="pincode" value="<%=address.pincode%>">
+              <div class="error-message" id="pincodeError"></div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="form-group col-md-4">
+              <label for="phone">Phone:</label>
+              <input type="number" class="form-control border-3" id="phone" name="phone" value="<%=address.phone%>">
+              <div class="error-message" id="phoneError"></div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="altPhone">Alternate Phone:</label>
+              <input type="number" class="form-control border-3" id="altPhone" name="altPhone" value="<%=address.altPhone%>">
+              <div class="error-message" id="altPhoneError"></div>
+            </div>
+          </div>
+          <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.getElementById('addressForm').addEventListener('submit', function(event) {
+  event.preventDefault()
+
+  
+  document.querySelectorAll('.error-message').forEach(function(element) {
+    element.innerText = ''
+  })
+
+ 
+  const addressType = document.getElementById('addressType').value
+  const name = document.getElementById('name').value
+  const city = document.getElementById('city').value
+  const landMark = document.getElementById('landMark').value
+  const state = document.getElementById('state').value
+  const pincode = document.getElementById('pincode').value
+  const phone = document.getElementById('phone').value
+  const altPhone = document.getElementById('altPhone').value
+
+  let isValid = true;
+
+  
+  if (phone.length !== 10) {
+    document.getElementById('phoneError').innerText = 'Phone number must be 10 digits long.';
+    isValid = false;
+  }
+
+  if (altPhone.length !== 10) {
+    document.getElementById('altPhoneError').innerText = 'Alternate phone number must be 10 digits long.';
+    isValid = false;
+  }
+
+  
+  if (pincode.length !== 6) {
+    document.getElementById('pincodeError').innerText = 'Pincode must be 6 digits long.';
+    isValid = false;
+  }
+
+ 
+  if (!addressType) {
+    document.getElementById('addressTypeError').innerText = 'Please fill out this field.';
+    isValid = false;
+  }
+  if (!name) {
+    document.getElementById('nameError').innerText = 'Please fill out this field.';
+    isValid = false;
+  }
+  if (!city) {
+    document.getElementById('cityError').innerText = 'Please fill out this field.';
+    isValid = false;
+  }
+  if (!landMark) {
+    document.getElementById('landMarkError').innerText = 'Please fill out this field.';
+    isValid = false;
+  }
+  if (!state) {
+    document.getElementById('stateError').innerText = 'Please fill out this field.';
+    isValid = false;
+  }
+
+  
+  if (isValid) {
+    this.submit();
+  }
+});
+</script>

@@ -1,0 +1,183 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .table td {
+    padding: 15px;
+    vertical-align: middle;
+  }
+
+  .action-button {
+    min-width: 100px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: white;
+    text-decoration: none;
+  }
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
+
+</style>
+
+<div class="content">
+  <h3 class="page-title">Customer Management</h3>
+  
+  <!-- Search Bar -->
+  <div class="search-container">
+    <form action="/admin/users" method="get">
+      <div class="input-group">
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control" 
+          placeholder="Search customers..." 
+          value=""
+        >
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-search"></i> Search
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Customers Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone No</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let i = 0; i < data.length; i++) { %>
+          <tr>
+            <td><%= data[i].name %></td>
+            <td><%= data[i].email %></td>
+            <td><%= data[i].phone %></td>
+            <td>
+              <% if(data[i].isBlocked === false) { %>
+                <span class="badge bg-success">Active</span>
+              <% } else { %>
+                <span class="badge bg-danger">Blocked</span>
+              <% } %>
+            </td>
+            <td>
+              <% if(data[i].isBlocked === false) { %>
+                <a href="/admin/blockCustomer?id=<%= data[i]._id %>" 
+                   class="btn btn-danger btn-sm action-button">
+                  <i class="fas fa-ban"></i> Block
+                </a>
+              <% } else { %>
+                <a href="/admin/unblockCustomer?id=<%= data[i]._id %>" 
+                   class="btn btn-success btn-sm action-button">
+                  <i class="fas fa-check"></i> Unblock
+                </a>
+              <% } %>
+            </td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+    <% } %>
+    
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === currentPage) { %>
+        <span class="current-page"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %>"><%= i %></a>
+      <% } %>
+    <% } %>
+    
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+    <% } %>
+  </div>
+</div>
+
+
+<%- include("../../views/partials/admin/footer") %>

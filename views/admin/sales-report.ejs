@@ -1,0 +1,230 @@
+
+
+
+
+
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    padding: 20px;
+  }
+
+  .metrics-card {
+    background: linear-gradient(45deg, var(--primary), var(--primary-hover));
+    color: white;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  .filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .report-type-btn {
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 4px;
+    transition: all 0.3s;
+  }
+
+  .report-type-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  .export-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    color: white;
+    transition: all 0.3s;
+  }
+</style>
+
+<div class="content">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="page-title">Sales Report</h3>
+    <div class="btn-group" style="margin-top: 125px;">
+      <button onclick="exportReport('pdf')" class="btn btn-danger export-btn me-2">
+        <i class="fas fa-file-pdf"></i> Export PDF
+      </button>
+      <button onclick="exportReport('excel')" class="btn btn-success export-btn">
+        <i class="fas fa-file-excel"></i> Export Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Metrics Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value">₹<%= reportData.totalSales.toLocaleString() %></div>
+        <div class="metric-label">Total Sales</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value"><%= reportData.totalOrders %></div>
+        <div class="metric-label">Total Orders</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value">₹<%= reportData.totalDiscount.toLocaleString() %></div>
+        <div class="metric-label">Total Discount</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value">₹<%= reportData.couponDiscount.toLocaleString() %></div>
+        <div class="metric-label">Coupon Discount</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section mb-4">
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="btn-group w-100" role="group">
+          <button type="button" class="btn report-type-btn <%= reportType === 'daily' ? 'active' : '' %>" 
+                  onclick="changeReportType('daily')">Daily</button>
+          <button type="button" class="btn report-type-btn <%= reportType === 'weekly' ? 'active' : '' %>"
+                  onclick="changeReportType('weekly')">Weekly</button>
+          <button type="button" class="btn report-type-btn <%= reportType === 'monthly' ? 'active' : '' %>"
+                  onclick="changeReportType('monthly')">Monthly</button>
+          <button type="button" class="btn report-type-btn <%= reportType === 'custom' ? 'active' : '' %>"
+                  onclick="toggleCustomDate()">Custom Date</button>
+        </div>
+      </div>
+      <div class="col-12 custom-date-inputs" style="display: <%= reportType === 'custom' ? 'block' : 'none' %>">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <input type="date" class="form-control" id="startDate" value="<%= startDate?.toISOString().split('T')[0] %>">
+          </div>
+          <div class="col-md-5">
+            <input type="date" class="form-control" id="endDate" value="<%= endDate?.toISOString().split('T')[0] %>">
+          </div>
+          <div class="col-md-2">
+            <button onclick="applyCustomDate()" class="btn btn-primary w-100">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sales Data Table -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Discount</th>
+            <th>Final Amount</th>
+            <th>Payment Method</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% reportData.orders.forEach(order => { %>
+          <tr>
+            <td><a href="/admin/order/<%= order.orderId %>"><%= order.orderId %></a></td>
+            <td><%= new Date(order.date).toLocaleDateString() %></td>
+            <td>₹<%= order.amount.toLocaleString() %></td>
+            <td>₹<%= order.discount.toLocaleString() %></td>
+            <td>₹<%= (order.amount - order.discount).toLocaleString() %></td>
+            <td><%= order.paymentMethod %></td>
+            <td>
+              <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                <%= order.status %>
+              </span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr class="table-active">
+            <td colspan="2"><strong>Total</strong></td>
+            <td><strong>₹<%= reportData.totalSales.toLocaleString() %></strong></td>
+            <td><strong>₹<%= reportData.totalDiscount.toLocaleString() %></strong></td>
+            <td><strong>₹<%= (reportData.totalSales - reportData.totalDiscount).toLocaleString() %></strong></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function changeReportType(type) {
+  window.location.href = `/admin/sales-report?reportType=${type}`;
+}
+
+function toggleCustomDate() {
+  document.querySelector('.custom-date-inputs').style.display = 'block';
+}
+
+function applyCustomDate() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  if (startDate && endDate) {
+    window.location.href = `/admin/sales-report?reportType=custom&startDate=${startDate}&endDate=${endDate}`;
+  } else {
+    Swal.fire('Error', 'Please select both start and end dates', 'error');
+  }
+}
+
+async function exportReport(type) {
+  const reportType = '<%= reportType %>';
+  const startDate = document.getElementById('startDate')?.value;
+  const endDate = document.getElementById('endDate')?.value;
+  
+  let url = `/admin/sales-report/export?type=${type}&reportType=${reportType}`;
+  if (reportType === 'custom' && startDate && endDate) {
+    url += `&startDate=${startDate}&endDate=${endDate}`;
+  }
+  
+  try {
+    window.location.href = url;
+  } catch (error) {
+    console.error('Export error:', error);
+    Swal.fire('Error', 'Failed to export report', 'error');
+  }
+}
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

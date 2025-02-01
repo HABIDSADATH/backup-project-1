@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .signup-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f7444e;
+        }
+
+        h2 {
+            color: #f7444e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #000;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            background-color: #f9f9f9;
+        }
+
+        input[type="submit"] {
+            background-color: #f7444e;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #d63a3f;
+        }
+
+        .google-btn {
+            background-color: #fff;
+            border: 1px solid #4285f4; 
+            color: #4285f4;
+            width: 94%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        .google-btn:hover {
+            background-color: #f1f1f1;
+        }
+
+        .google-btn svg {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .error-message{
+            color: red;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .error-message-back {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-container input {
+            width: 100%;
+            padding-right: 40px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-container">
+        <h2>Sign Up</h2>
+        <form id="signupForm" action="/signup" method="post">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" >
+            <div id="error1" class="error-message"></div>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" >
+            <div id="error2" class="error-message"></div>
+
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" >
+            <div id="error3" class="error-message"></div>
+
+            <label for="password">Password</label>
+            <div class="password-container">
+                <input type="password" id="password" name="password">
+                <span class="material-icons toggle-password" onclick="togglePassword('password')">visibility_off</span>
+            </div>
+            <div id="error4" class="error-message"></div>
+
+            <label for="confirm-password">Confirm Password</label>
+            <div class="password-container">
+                <input type="password" id="cPassword" name="cPassword">
+                <span class="material-icons toggle-password" onclick="togglePassword('cPassword')">visibility_off</span>
+            </div>
+            <div id="error5" class="error-message"></div>
+
+            <% if (locals.message) { %>
+                <div class="error-message-back"><%=message%></div>
+            <% } %>
+
+            <input type="submit" value="Sign Up">
+        </form>
+
+        <!-- Google Sign Up Button -->
+        <a href="/auth/google" class="google-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.14 0 5.67 1.08 7.71 2.85l5.76-5.76C33.95 3.35 29.27 1.5 24 1.5 14.64 1.5 6.72 7.6 3.76 15.76l6.64 5.22C12.75 14.11 17.96 9.5 24 9.5z"/><path fill="#34A853" d="M46.24 24.5c0-1.65-.14-3.24-.41-4.76H24v9.5h12.5c-1.15 3.55-3.27 6.45-6.23 8.38l7.61 5.98c4.45-4.12 7.36-10.2 7.36-18.12z"/><path fill="#FBBC05" d="M10.4 28.78c-1.07-3.22-1.07-6.74 0-9.96l-6.64-5.22C1.14 17.01 0 20.43 0 24s1.14 6.99 3.76 10.4l6.64-5.22z"/><path fill="#EA4335" d="M24 46.5c5.27 0 9.95-1.75 13.66-4.74l-7.61-5.98c-2.14 1.44-4.86 2.3-6.82 2.3-6.04 0-11.25-4.61-12.6-10.76l-6.64 5.22C6.72 40.4 14.64 46.5 24 46.5z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            Sign Up with Google
+        </a>
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="/login" style="color: black; text-decoration: none;">Already have an account? Log In</a>
+        </div>
+        
+    </div>
+    
+
+    <script>
+        const nameId = document.getElementById('name');
+        const emailId = document.getElementById('email');
+        const phoneId = document.getElementById('phone');
+        const passwordId = document.getElementById('password');
+        const cPassId = document.getElementById('cPassword');
+        const error1 = document.getElementById('error1')
+        const error2 = document.getElementById('error2')
+        const error3 = document.getElementById('error3')
+        const error4 = document.getElementById('error4')
+        const error5 = document.getElementById('error5')
+        const signupForm = document.getElementById('signupForm')
+
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const icon = passwordInput.nextElementSibling;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+
+        function nameValidateChecking(e){
+            const nameVal = nameId.value;
+            const namePattern = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/
+            if(nameVal.trim()===""){
+                error1.style.display = "block";
+                error1.innerHTML = "Name required"
+            }else if(!namePattern.test(nameVal)){
+                error1.style.display = "block";
+                error1.innerHTML = "Name should only contain letters";
+            }else{
+                error1.style.display = "none";
+                error1.innerHTML =""
+            }
+        }
+
+        function emailValidateChecking(e){
+            const emailVal = emailId.value;
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+            if(emailVal.trim()==""){
+                error2.style.display ="block";
+                error2.innerHTML = "email is required"
+            }
+            else if(!emailPattern.test(emailVal)){
+                error2.style.display ="block";
+                error2.innerHTML = "invalid format"
+            }else{
+                error2.style.display = "none";
+                error2.innerHTML =""
+            }
+        }
+
+        function phoneValidateChecking(e){
+            const phoneVal = phoneId.value;
+            const phonePattern = /^[0-9]{10}$/
+            
+            if(phoneVal.trim()==""){
+                error3.style.display = "block";
+                error3.innerHTML = "Phone number required"
+            }else if(!phonePattern.test(phoneVal)){
+                error3.style.display = "block";
+                error3.innerHTML = "enter valid phone number";
+            }else if(phoneVal.length<10 || phoneVal.length>10){
+                error3.style.display = "block";
+                error3.innerHTML = "phone number should be 10 digits long";
+            }else{
+                error3.style.display = "none";
+                error3.innerHTML =""
+            }
+        }
+
+        function passwordValidateChecking (e){
+            const passVal = passwordId.value;
+            const cPassVal = cPassId.value;
+            const alpha = /[a-zA-Z]/;
+            const digit = /\d/;
+
+            if(passVal.length<8){
+                error4.style.display = "block";
+                error4.innerHTML = "Password should be at least 8 characters";
+            }else if(!alpha.test(passVal) || !digit.test(passVal)){
+                error4.style.display = "block";
+                error4.innerHTML = "Password should contain numbrs and alphabets";
+            }else{
+                error4.style.display = "none";
+                error4.innerHTML = ""
+            }
+
+            if(passVal!==cPassVal){
+                error5.style.display = "block";
+                error5.innerHTML = "Passwords do not match";
+            }else{
+                error5.style.display = "none";
+                error5.innerHTML =""
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded",function(){
+            signupForm.addEventListener("submit",function(e){
+                nameValidateChecking();
+                emailValidateChecking();
+                phoneValidateChecking();
+                passwordValidateChecking();
+
+                if(
+                    error1.innerHTML ||
+                    error2.innerHTML ||
+                    error3.innerHTML ||
+                    error4.innerHTML ||
+                    error5.innerHTML
+                ){
+                    e.preventDefault()
+                }
+            })
+        })
+    </script>
+</body>
+</html>

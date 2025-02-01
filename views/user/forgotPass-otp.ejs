@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - Verify OTP</title>
+    <!-- Link to Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .otp-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f7444e;
+        }
+
+        h2 {
+            color: #f7444e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #000;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input[type="text"] {
+            background-color: #f9f9f9;
+        }
+
+        button {
+            width: 100%;
+        }
+
+        .resend-btn,
+        .verify-btn {
+            background-color: #f7444e;
+            color: #fff;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 5px;
+            display: block;
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .resend-btn:hover,
+        .verify-btn:hover {
+            background-color: #d63a3f;
+        }
+
+        .login-link {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #000;
+            margin-top: 15px;
+        }
+
+        .login-link a {
+            color: #f7444e;
+            text-decoration: none;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #f7444e;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="otp-container">
+        <h2>Forgot Password - Verify OTP</h2>
+        <form id="otpForm" action="/verify-forgot-password-otp" method="post" onsubmit="return validateOTPForm()">
+            <label for="otp">Enter OTP</label>
+            <input type="text" id="otp" name="otp">
+            <div id="error1" class="error-message"></div>
+
+            <div class="timer" id="timer">01:00</div>
+
+            <button class="verify-btn" id="resend-btn" onclick="resendOTP()">Resend OTP</button>
+            <button type="submit" class="verify-btn" id="verify-btn">Verify OTP</button>
+        </form>
+
+        <div class="login-link">
+            <p>Remembered your password? <a href="/login">Login</a></p>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let timeLeft = 60;  
+        const timerElement = document.getElementById('timer');
+        const resendButton = document.getElementById('resend-btn');
+        const verifyButton = document.getElementById('verify-btn');
+        let countdown; 
+        
+        function startCountdown() {
+            countdown = setInterval(function() {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                seconds = seconds < 10 ? '0' + seconds : seconds; 
+    
+                timerElement.textContent = `${minutes}:${seconds}`;
+    
+                if (timeLeft <= 0) {
+                    clearInterval(countdown); 
+                    resendButton.disabled = false;  
+                    resendButton.style.backgroundColor = "#f7444e";  
+                    resendButton.style.cursor = "pointer";  
+                } else {
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+    
+        resendButton.disabled = true;
+        resendButton.style.backgroundColor = "#ddd";  
+        resendButton.style.cursor = "not-allowed";  
+    
+        // function validateOTPForm() {
+        //     const otpInput = document.getElementById('otp').value;
+    
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "/verify-passForgot-otp",
+        //         data: { otp: otpInput },
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 Swal.fire({
+        //                     icon: "success",
+        //                     title: "OTP verified successfully",
+        //                     showConfirmButton: false,
+        //                     timer: 1500,
+        //                 }).then(() => {
+        //                     window.location.href = response.redirectUrl;
+        //                 })
+        //             } else {
+        //                 Swal.fire({
+        //                     icon: "error",
+        //                     title: "Invalid OTP",
+        //                     text: response.message,
+        //                 })
+        //             }
+        //         },
+        //         error: function() {
+        //             Swal.fire({
+        //                 icon: "error",
+        //                 title: "Invalid OTP",
+        //                 text: "Please try again",
+        //             })
+        //         }
+        //     });
+        //     return false; 
+        // }
+    
+        function resendOTP() {
+            event.preventDefault();
+            clearInterval(countdown);  
+            timeLeft = 60;  
+            document.getElementById('otp').disabled = false; 
+            startCountdown();  
+    
+            $.ajax({
+                type: 'POST',
+                url: '/resend-forgot-otp',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'OTP resent successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: "Error",
+                            text: 'Failed to resend OTP',
+                        })
+                    }
+                }
+            });
+            return false; 
+        }
+
+        window.onload = function() {
+            startCountdown();
+        };
+    </script>
+</body>
+</html>

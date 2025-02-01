@@ -1,0 +1,279 @@
+
+
+
+
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .brand-form {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+  .error-message {
+    color: var(--primary);
+    font-size: 0.875rem;
+    margin-top: 5px;
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .table td {
+    padding: 15px;
+    vertical-align: middle;
+  }
+
+  .action-button {
+    min-width: 90px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+    margin: 0 5px;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: white;
+    text-decoration: none;
+  }
+
+  .brand-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .input-upload {
+    margin-bottom: 20px;
+  }
+
+  .input-upload img {
+    max-width: 100px;
+    margin-bottom: 10px;
+  }
+
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
+</style>
+
+<div class="content">
+  <h3 class="page-title">Brand Management</h3>
+  
+  <div class="row g-4">
+    <!-- Add Brand Form -->
+    <div class="col-md-4">
+      <div class="brand-form">
+        <h5 class="mb-4">Add New Brand</h5>
+        <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
+          <div class="mb-4">
+            <label for="product_name" class="form-label">Brand Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter brand name"
+              class="form-control"
+              id="product_name"
+            />
+            <div id="name-error" class="error-message"></div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label">Brand Logo</label>
+            <div class="input-upload">
+              <img src="" alt="" id="preview-image"/>
+              <input 
+                class="form-control" 
+                name="image" 
+                type="file" 
+                accept="image/*"
+                onchange="previewImage(event)"
+              />
+            </div>
+            <div id="image-error" class="error-message"></div>
+          </div>
+          
+          <div class="d-grid">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-plus"></i> Create Brand
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Brands Table -->
+    <div class="col-md-8">
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Logo</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%data.reverse().forEach((brand,index)=>{%>
+              <tr>
+                <td class="text-start"><%=brand.brandName%></td>
+                <td>
+                  <div class="d-flex align-items-center justify-content-center">
+                    <img
+                      src="/uploads/re-image/<%brand.brandImage[0]%>"
+                      alt="<%=brand.brandName%>"
+                      class="brand-image"
+                    />
+                  </div>
+                </td>
+                <td>
+                  <%if(brand.isBlocked === true){%>
+                  <span class="badge bg-danger">Blocked</span>
+                  <%}else{%>
+                  <span class="badge bg-success">Active</span>
+                  <%}%>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <%if(brand.isBlocked === false){%>
+                    <a class="btn btn-danger action-button" href="/admin/blockBrand?id=<%=brand._id%>">
+                      <i class="fas fa-ban"></i> Block
+                    </a>
+                    <%}else{%>
+                    <a class="btn btn-success action-button" href="/admin/unBlockBrand?id=<%=brand._id%>">
+                      <i class="fas fa-check"></i> Unblock
+                    </a>
+                    <%}%>
+                    <a href="/admin/deleteBrand?id=<%=brand._id%>" class="btn btn-danger action-button" onclick="return confirmDelete()">
+                      <i class="fas fa-trash"></i> Delete
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              <%})%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <div class="pagination-container">
+      <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+      <% } %>
+      
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <span class="current-page"><%= i %></span>
+        <% } else { %>
+          <a href="?page=<%= i %>"><%= i %></a>
+        <% } %>
+      <% } %>
+      
+      <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+function previewImage(event) {
+  const preview = document.getElementById('preview-image');
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function() {
+    preview.src = reader.result;
+  }
+
+  if (file) {
+    reader.readAsDataURL(file);
+  }
+}
+
+function confirmDelete(){
+  return confirm("Are you sure you want to delete this brand?")
+}
+
+
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

@@ -1,0 +1,41 @@
+
+
+
+<%- include("../../views/partials/admin/header") %>
+
+<div class="content">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 mt-5">
+        <div class="card">
+          <div class="card-header">
+            Edit Category
+          </div>
+          <div class="card-body">
+            <% if (typeof error !== 'undefined') { %>
+              <div class="alert alert-danger" role="alert">
+                <%= error %>
+              </div>
+            <% } %>
+            <form method="post" action="/admin/editCategory/<%= category._id %>">
+              <div class="mb-3">
+                <label for="category_name" class="form-label">Name</label>
+                <input type="text" id="category_name" name="categoryName" value="<%= category.name %>" class="form-control" required>
+              </div>
+              
+              <div class="mb-3">
+                <label for="category_description" class="form-label">Description</label>
+                <textarea id="category_description" name="description" class="form-control" rows="4" required><%= category.description %></textarea>
+              </div>
+
+              <div class="d-grid">
+                <button class="btn" style="background-color: #f7444e; color: white;" type="submit" >Update Category</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include("../../views/partials/admin/footer") %>

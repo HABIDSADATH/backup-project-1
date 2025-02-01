@@ -1,0 +1,344 @@
+
+
+
+
+
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    padding: 20px;
+  }
+
+  .metrics-card {
+    background: linear-gradient(45deg, var(--primary), var(--primary-hover));
+    color: white;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .status-pending { background-color: #ffeeba; color: #856404; }
+  .status-processing { background-color: #b8daff; color: #004085; }
+  .status-shipped { background-color: #c3e6cb; color: #155724; }
+  .status-delivered { background-color: #d4edda; color: #155724; }
+  .status-cancelled { background-color: #f8d7da; color: #721c24; }
+
+  .action-button {
+    min-width: 120px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    margin: 2px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
+</style>
+
+<div class="content">
+  <h3 class="page-title">Order Management</h3>
+
+  <!-- Metrics Section -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value">₹<%= metrics.totalRevenue.toLocaleString() %></div>
+        <div class="metric-label">Total Revenue</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value"><%= metrics.totalOrders %></div>
+        <div class="metric-label">Total Orders</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card metrics-card">
+        <div class="metric-value">₹<%= metrics.averageOrderValue.toFixed(2) %></div>
+        <div class="metric-label">Average Order Value</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <!-- <div class="filter-section">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <select class="form-select" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <input type="date" class="form-control" id="startDate">
+      </div>
+      <div class="col-md-3">
+        <input type="date" class="form-control" id="endDate">
+      </div>
+      <div class="col-md-3">
+        <button onclick="applyFilters()" class="btn btn-primary w-100">
+          <i class="fas fa-filter"></i> Apply Filters
+        </button>
+      </div>
+    </div>
+  </div> -->
+
+  
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+          <tr>
+            <td>
+              <% order.orderItems.forEach(item => { %>
+                <a href="/admin/order/<%= order.orderId %>">
+                  <% if (item.productDetails?.productImages?.[0]) { %>
+                    <img src="/uploads/re-image/<%= item.productDetails.productImages[0] %>" 
+                         alt="Product Image" 
+                         style="width: 50px; height: auto; margin-right: 5px;">
+                  <% } %>
+                </a>
+              <% }) %>
+            </td>
+            
+            <td>
+              <%= order.userDetails?.name || 'N/A' %><br>
+              <small class="text-muted"><%= order.userDetails?.email || 'N/A' %></small>
+            </td>
+            <td>
+              <% order.orderItems.forEach(item => { %>
+                <%= item.productDetails?.productName || 'Product Not Found' %> x <%= item.quantity %><br>
+              <% }) %>
+            </td>
+            <td>₹<%= order.finalAmount?.toLocaleString() || 0 %></td>
+            <td>
+              <span class="status-badge status-<%= order.status?.toLowerCase() %>">
+                <%= order.status %>
+              </span>
+            </td>
+            <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
+            <td>
+              <div class="d-flex flex-wrap gap-2">
+                <button onclick="updateStatus('<%= order.orderId %>')" class="btn btn-primary btn-sm action-button">
+                  <i class="fas fa-sync-alt"></i> Update Status
+                </button>
+                
+                <% if (['pending', 'processing'].includes(order.status)) { %>
+                  <button onclick="cancelOrder('<%= order.orderId %>')" class="btn btn-danger btn-sm action-button">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+    <% } %>
+    
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === currentPage) { %>
+        <span class="current-page"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %>"><%= i %></a>
+      <% } %>
+    <% } %>
+    
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+    <% } %>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<%- include("../../views/partials/admin/footer") %>
+
+<script>
+async function updateStatus(orderId) {
+  const { value: status } = await Swal.fire({
+    title: 'Update Order Status',
+    input: 'select',
+    inputOptions: {
+      'pending': 'Pending',
+      'processing': 'Processing',
+      'shipped': 'Shipped',
+      'Delivered': 'Delivered',
+      'Cancelled': 'Cancelled'
+    },
+    inputPlaceholder: 'Select status',
+    showCancelButton: true
+  });
+
+  if (status) {
+    try {
+      const response = await fetch('/admin/order/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId, status })
+      });
+
+      const data = await response.json();
+      
+      if (data.status) {
+        Swal.fire('Success', 'Order status updated successfully', 'success')
+          .then(() => location.reload());
+      } else {
+        Swal.fire('Error', data.message || 'Failed to update status', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire('Error', 'An error occurred while updating status', 'error');
+    }
+  }
+}
+
+async function cancelOrder(orderId) {
+  const result = await Swal.fire({
+    title: 'Cancel Order',
+    text: 'Are you sure you want to cancel this order?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, cancel it',
+    cancelButtonText: 'No, keep it'
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const response = await fetch('/admin/order/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId })
+      });
+
+      const data = await response.json();
+      
+      if (data.status) {
+        Swal.fire('Cancelled', 'Order has been cancelled', 'success')
+          .then(() => location.reload());
+      } else {
+        Swal.fire('Error', data.message || 'Failed to cancel order', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire('Error', 'An error occurred while cancelling order', 'error');
+    }
+  }
+}
+
+function applyFilters() {
+  const status = document.getElementById('statusFilter').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  let url = '/admin/orders/filter?';
+  if (status) url += `status=${status}&`;
+  if (startDate) url += `startDate=${startDate}&`;
+  if (endDate) url += `endDate=${endDate}`;
+
+  window.location.href = url;
+}
+</script>

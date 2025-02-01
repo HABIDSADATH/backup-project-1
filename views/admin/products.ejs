@@ -1,0 +1,303 @@
+
+
+
+
+<%- include("../../views/partials/admin/header") %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .action-button {
+    min-width: 80px;
+    border-radius: 4px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+    margin: 0 2px;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: white;
+    text-decoration: none;
+  }
+
+  .badge {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
+</style>
+
+<div class="content">
+  <h3 class="page-title">Products Management</h3>
+  
+  <!-- Search Bar -->
+  <div class="search-container">
+    <form action="" method="get">
+      <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Search products or brands" value="">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-search"></i> Search
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Products Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Brand</th>
+            <th>Category</th>
+            <th>Sale Price</th>
+            <th>Offer Price</th>
+            <th>Offer</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%for(let i=data.length-1;i>=0;i--){%>
+          <tr>
+            <td><%= data[i].productName %></td>
+            <td><%= data[i].brand %></td>
+            <td><%= data[i].category.name %></td>
+            <td>₹<%= data[i].salePrice %></td>
+            <td>
+                <%if(locals.data[i].productOffer){%>
+                  <%=data[i].productOffer%>
+                <%}else{%>  
+                  0%
+                <%}%>  
+            </td>
+            <td>
+              <%if(locals.data[i].productOffer === 0){%>
+              
+              <button onclick="addOffer('<%=data[i]._id%>')" class="btn btn-info btn-sm action-button">
+                <i class="fas fa-percent"></i> Add Offer
+              </button>
+              <%}else{%>
+                <button onclick="removeOffer('<%=data[i]._id%>')" class="btn btn-warning btn-sm action-button">
+                  <i class="fas fa-times"></i> Remove Offer
+                </button>
+              <%}%>  
+              
+            </td>
+            <td><%=data[i].quantity%></td>
+            <td>
+              <%if(data[i].isBlock === false){%>
+              <a href="/admin/blockProduct?id=<%=data[i]._id%>" class="btn btn-danger btn-sm action-button">
+                <i class="fas fa-lock"></i> Block
+              </a>
+              <%}else{%>
+              
+                <a href="/admin/unblockProduct?id=<%=data[i]._id%>" class="btn btn-success btn-sm action-button">
+                  <i class="fas fa-unlock"></i> Unblock
+                </a>
+              
+              <%}%>
+            </td>
+            <td>
+              <a href="/admin/editProduct?id=<%=data[i]._id%>" class="btn btn-primary btn-sm action-button">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </td>
+          </tr>
+          <%}%>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+    <% } %>
+    
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === currentPage) { %>
+        <span class="current-page"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %>"><%= i %></a>
+      <% } %>
+    <% } %>
+    
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+    <% } %>
+  </div>
+</div>
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+
+
+
+<script>
+  async function addOffer(productId) {
+  try {
+    console.log(productId);
+    const { value: amount } = await Swal.fire({
+      title: 'Offer in percentage',
+      input: 'number',
+      inputLabel: 'percentage',
+      inputPlaceholder: '%'
+    });
+
+    if (amount !== undefined) {
+      const response = await fetch('/admin/addProductOffer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          percentage: amount,
+          productId: productId
+        })
+      });
+
+      const data = await response.json();
+      console.log(data); 
+
+      if (data.status === true) {
+        Swal.fire('Offer added', 'The Offer has been added', 'success').then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire('Failed', data.message || 'Failed to add offer', 'error'); // Use server-provided message
+      }
+    }
+  } catch (error) {
+    console.error('Add offer error:', error);
+    Swal.fire('Error', 'Request failed, please try again', 'error');
+  }
+}
+
+
+  function removeOffer(productId) {
+    try {
+      Swal.fire({
+        title: 'Remove Offer',
+        text: 'Are you sure you want to remove the offer?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it!',
+        timer: 5000,
+        timerProgressBar: true
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const response = await fetch('/admin/removeProductOffer', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              productId: productId
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.status === true) {
+            Swal.fire('Removed!', 'The offer has been removed', 'success').then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire('Failed', 'Failed to remove offer', 'error');
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Remove offer error:', error);
+      Swal.fire('Error', 'Request failed, please try again', 'error');
+    }
+  }
+</script>
+
+  
+
+
+
+
+<%- include("../../views/partials/admin/footer") %>
