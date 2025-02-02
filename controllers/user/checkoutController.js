@@ -123,6 +123,15 @@ const applyCoupon = async (req, res) => {
       }); 
     } 
     console.log('subTotal:', subTotal);
+
+    if (couponCode && coupon.offerPrice > 0) {  
+      await Coupon.findOneAndUpdate(
+        { couponCode: couponCode },
+        { $push: { userId: user } },
+        { new: true }
+      );
+    }
+
     return res.status(200).json({ 
       success: true, 
       discountAmount: coupon.offerPrice, 
@@ -137,6 +146,7 @@ const applyCoupon = async (req, res) => {
     }); 
   } 
 };
+
 
 
 

@@ -312,11 +312,12 @@
             });
         });
 
-        function handleCheckout() {
+function handleCheckout() {
     const selectedAddress = document.querySelector('input[name="addressId"]:checked');
     const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
     const finalAmount = document.getElementById('finalAmountId').textContent;
     const discountAmount = document.getElementById('discountAmount').textContent;
+    const selectedCoupon = document.getElementById('couponSelect').value
 
     if (!selectedAddress) {
         Swal.fire({
@@ -331,10 +332,11 @@
         addressId: selectedAddress.value,
         paymentMethod: selectedPayment.value,
         finalAmount: finalAmount,
-        discountAmount: discountAmount
+        discountAmount: discountAmount,
+        couponCode: selectedCoupon
     };
 
-    // Step 1: Create the order in the database
+    
     fetch('/placeOrder', {
         method: 'POST',
         headers: {

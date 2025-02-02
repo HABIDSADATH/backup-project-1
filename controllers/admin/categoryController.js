@@ -56,20 +56,28 @@ const addCategoryOffer = async (req, res) => {
     if (percentage > 99) {
       return res.status(400).json({ status: false, message: "Offer percentage cannot be greater than 99%" });
     }
+
     const category = await Category.findById(categoryId);
     if (!category) {
       return res.status(400).json({ status: false, message: "category not found" });
     }
-    const products = await Product.find({ category: category._id }); 
-    const hasProductOffer = products.some((product) => product.productOffer > percentage); 
+
+    const products = await Product.find({ category: category._id });
+    
+    
+    const hasProductOffer = products.some((product) => product.productOffer > 0); 
     if (hasProductOffer) {
       return res.json({ status: false, message: "Products within this category already have offer" });
     }
+
     await Category.updateOne({ _id: categoryId }, { $set: { categoryOffer: percentage } });
 
+    
     for (const product of products) {
       product.productOffer = 0;
-      product.salePrice = product.regularPrice;
+      
+      const discountAmount = (product.regularPrice * percentage) / 100;
+      product.salePrice = product.regularPrice - discountAmount;
       await product.save();
     }
 
@@ -78,7 +86,7 @@ const addCategoryOffer = async (req, res) => {
     console.error("Error in addCategoryOffer:", error);
     res.status(500).json({ status: false, message: "Internal server error" });
   }
-}
+};
 
 const removeCategoryOffer = async (req, res) => {
   try {

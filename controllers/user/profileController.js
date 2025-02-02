@@ -183,10 +183,14 @@ const userProfile = async (req, res) => {
     const userData = await User.findById(user);
     const addressData = await Address.findOne({ userId: user });
 
-    // Get wallet data
     const walletData = await Wallet.findOne({ userId: user })
       .populate('transactions.orderId')
       .sort({ 'transactions.createdAt': -1 });
+
+    
+    if (walletData && walletData.transactions) {
+      walletData.transactions.sort((a, b) => b.createdAt - a.createdAt);
+    }
 
     const ordersData = await Order.aggregate([
       { $match: { 'userId': new mongoose.Types.ObjectId(user) } },
@@ -207,7 +211,7 @@ const userProfile = async (req, res) => {
       user: userData,
       userAddress: addressData,
       orderData: ordersData,
-      wallet: walletData || { balance: 0, transactions: [] } 
+      wallet: walletData || { balance: 0, transactions: [] }
     });
 
   } catch (error) {

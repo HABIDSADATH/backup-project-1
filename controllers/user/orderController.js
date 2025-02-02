@@ -4,6 +4,7 @@ const Product = require('../../models/productSchema')
 const Address = require('../../models/addressSchema')
 const User = require('../../models/userSchema')
 const mongoose = require('mongoose')
+const Coupon = require('../../models/couponSchema')
 
 const env = require("dotenv").config()
 const Razorpay = require('razorpay');
@@ -12,7 +13,7 @@ const crypto = require('crypto');
 
 const placeOrder = async (req, res) => {
   try {
-      const { addressId, paymentMethod } = req.body;
+      const { addressId, paymentMethod, couponCode } = req.body; 
       const finalAmount = parseFloat(req.body.finalAmount);
       const discountAmount = parseFloat(req.body.discountAmount);
 
@@ -34,7 +35,6 @@ const placeOrder = async (req, res) => {
           });
       }
 
-      
       for (const item of userCart.items) {
           const product = await Product.findById(item.productId._id);
           if (!product || product.quantity < item.quantity) {
@@ -45,20 +45,17 @@ const placeOrder = async (req, res) => {
           }
       }
 
-      
       const orderItems = userCart.items.map((item) => ({
           product: item.productId._id,
           quantity: item.quantity,
           price: item.price,
       }));
 
-      
       const totalPrice = userCart.items.reduce(
           (total, item) => total + item.price * item.quantity,
           0
       );
 
-      
       const newOrder = new Order({
           orderItems,
           totalPrice,
@@ -67,12 +64,11 @@ const placeOrder = async (req, res) => {
           address: addressId,
           invoiceDate: new Date(),
           status: 'pending',
-          couponApplied: false,
+          couponApplied: discountAmount > 0,
           userId: user,
           paymentMethod,
       });
 
-      
       await newOrder.save();
 
       
@@ -85,19 +81,25 @@ const placeOrder = async (req, res) => {
       
       await Cart.findOneAndUpdate({ userId: user }, { $set: { items: [] } });
 
+      
+      if (couponCode && discountAmount > 0) {
+          await Coupon.findOneAndUpdate(
+              { couponCode: couponCode }, 
+              { $push: { userId: user } }, 
+              { new: true } 
+          );
+      }
+
       if (paymentMethod === 'online') {
-          
           const razorpayOrder = await razorpay.orders.create({
               amount: finalAmount * 100, 
               currency: 'INR',
               receipt: `receipt_${newOrder._id}`,
           });
 
-          
           newOrder.razorpayOrderId = razorpayOrder.id;
           await newOrder.save();
 
-          
           return res.json({
               success: true,
               message: 'Razorpay order created successfully',
@@ -105,11 +107,10 @@ const placeOrder = async (req, res) => {
               razorpayOrderId: razorpayOrder.id,
               amount: razorpayOrder.amount,
               currency: razorpayOrder.currency,
-              key: process.env.RAZORPAY_KEY_ID, 
+              key: process.env.RAZORPAY_KEY_ID,
           });
       }
 
-      
       return res.json({
           success: true,
           message: 'Order placed successfully',
@@ -183,78 +184,6 @@ const getOrderDetails = async (req, res) => {
 };
 
 
-// const cancelOrder = async (req, res) => {
-//   try {
-//     const orderId = req.params.orderId;
-//     const { cancellationReason } = req.body;
-    
-//     const order = await Order.findOne({ _id: orderId });
-//     if (!order) {
-//       return res.status(404).json({ 
-//         status: false, 
-//         message: "Order not found" 
-//       });
-//     }
-
-//     if (!['pending', 'processing'].includes(order.status)) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Order cannot be cancelled at this stage"
-//       });
-//     }
-
-    
-//     if (!cancellationReason) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Cancellation reason is required"
-//       });
-//     }
-
-    
-//     for (const item of order.orderItems) {
-//       const product = await Product.findOne({ _id: item.product });
-//       if (product) {
-//         product.quantity += item.quantity;
-//         await product.save();
-//       }
-//     }
-
-    
-//     if (order.paymentMethod !== 'cod' && order.isPaid) {
-//       try {
-//         const wallet = await getOrCreateWallet(order.userId);
-//         await addWalletTransaction(
-//           order.userId,
-//           order.finalAmount,
-//           'credit',
-//           `Refund for cancelled order #${order.orderId}`,
-//           order._id
-//         );
-//       } catch (walletError) {
-//         console.log("Wallet transaction error:", walletError);
-//       }
-//     }
-    
-//     order.status = 'Cancelled';
-//     order.cancellation = {
-//       reason: cancellationReason,
-//       cancelledAt: new Date()
-//     };
-//     await order.save();
-
-//     res.json({
-//       status: true,
-//       message: "Order cancelled successfully"
-//     });
-//   } catch (error) {
-//     console.log("cancel order error", error);
-//     res.status(500).json({ 
-//       status: false, 
-//       message: "Internal server error" 
-//     });
-//   }
-// };
 
 
 const cancelOrder = async (req, res) => {
@@ -272,7 +201,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Check if any of the orders are in a non-cancellable state
+    
     const nonCancellableOrder = orders.find(order => 
       !['pending', 'processing'].includes(order.status)
     );
@@ -291,11 +220,11 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Process refund and update inventory for each order item
+    
     let totalRefundAmount = 0;
 
     for (const order of orders) {
-      // Restore product quantities
+      
       for (const item of order.orderItems) {
         const product = await Product.findOne({ _id: item.product });
         if (product) {
@@ -304,12 +233,12 @@ const cancelOrder = async (req, res) => {
         }
       }
 
-      // Calculate total refund amount
+      
       if (order.paymentMethod !== 'cod' && order.isPaid) {
         totalRefundAmount += order.finalAmount;
       }
 
-      // Update order status
+      
       order.status = 'Cancelled';
       order.cancellation = {
         reason: cancellationReason,
@@ -318,10 +247,10 @@ const cancelOrder = async (req, res) => {
       await order.save();
     }
 
-    // Process refund to wallet if applicable
+    
     if (totalRefundAmount > 0) {
       try {
-        const userId = orders[0].userId; // All orders in the group have same userId
+        const userId = orders[0].userId; 
         const wallet = await getOrCreateWallet(userId);
         await addWalletTransaction(
           userId,
@@ -332,7 +261,7 @@ const cancelOrder = async (req, res) => {
         );
       } catch (walletError) {
         console.error("Wallet transaction error:", walletError);
-        // Consider whether to fail the whole operation or just log the error
+        
       }
     }
 

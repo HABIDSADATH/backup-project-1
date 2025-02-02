@@ -281,12 +281,12 @@ const loadShopingPage = async (req, res) => {
     const categoryIds = categories.map(category => category._id);
 
     const page = parseInt(req.query.page) || 1;
-    const limit = 12;
+    const limit = 9;
     const skip = (page - 1) * limit;
 
     const products = await Product.find({
       isBlock: false,
-      // category: { $in: categoryIds },
+      category: { $in: categoryIds },
       quantity: { $gt: 0 },
     }).sort({ createdOn: -1 }).skip(skip).limit(limit);
 
@@ -526,10 +526,7 @@ const latestSort = async (req, res) => {
 }
 
 const searchProducts = async (req,res)=>{
-  
-  console.log('searching products')
   try {
-
     const user = req.session.user
     
     const userData = await User.findOne({ _id: user })
@@ -538,7 +535,6 @@ const searchProducts = async (req,res)=>{
 
     const brands = await Brand.find({}).lean()
     const categories = await Category.find({ isListed: true }).lean()
-     
     const categoryIds = categories.map(category=>category._id.toString())
     let searchResult = []
     if(req.session.filteredProducts && req.session.filteredProducts.length>0){

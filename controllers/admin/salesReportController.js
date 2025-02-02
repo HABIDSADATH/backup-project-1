@@ -58,7 +58,7 @@ const getSalesReport = async (req, res) => {
           status: { $nin: ['cancelled'] } 
       }
 
-      const orders = await Order.find(query);
+      const orders = await Order.find(query).sort({ createdOn: -1 });
 
       const reportData = {
           totalOrders: orders.length,
