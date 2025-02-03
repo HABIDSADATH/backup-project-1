@@ -468,7 +468,7 @@
                                 };
                               }
                               groupedOrders[order.orderId].products.push(order.productDetails);
-                              groupedOrders[order.orderId].finalAmount += order.finalAmount;
+                              groupedOrders[order.orderId].finalAmount = order.finalAmount;
                             });
                             %>
                 

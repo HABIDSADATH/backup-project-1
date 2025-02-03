@@ -526,6 +526,7 @@ const latestSort = async (req, res) => {
 }
 
 const searchProducts = async (req,res)=>{
+  
   try {
     const user = req.session.user
     

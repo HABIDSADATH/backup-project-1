@@ -207,6 +207,8 @@ const userProfile = async (req, res) => {
       { $sort: { 'createdOn': -1 } }
     ]);
 
+    
+
     res.render('profile', {
       user: userData,
       userAddress: addressData,

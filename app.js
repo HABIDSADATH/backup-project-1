@@ -62,11 +62,11 @@ app.use((err, req, res, next) => {
     success: false,
     message: message,
   });
-});
+})
 
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
-});
+})
 
 module.exports = app;

@@ -147,7 +147,7 @@ const getOrderDetails = async (req, res) => {
       path: 'orderItems.product',
       select: 'productName productImages price',
     });
-    console.log('order is ', order);
+    
 
       
     if (!order) {

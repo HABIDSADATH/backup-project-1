@@ -49,7 +49,7 @@ const addToWishlist = async (req, res) => {
 const removeProduct = async(req,res)=>{
   try {
 
-    const productId = req.query.productId
+    const productId = req.query.id
     const userId = req.session.user
     const user = await User.findById(userId)
     const index = user.wishlist.indexOf(productId)
