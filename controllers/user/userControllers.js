@@ -298,7 +298,6 @@ const loadShopingPage = async (req, res) => {
       quantity: { $gt: 0 },
     });
 
-    console.log('total products are',totalProducts)
 
     const totalPages = Math.ceil(totalProducts / limit);
 

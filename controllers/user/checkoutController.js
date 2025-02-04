@@ -8,7 +8,7 @@ const Product = require('../../models/productSchema')
 const Address = require('../../models/addressSchema')
 const User = require('../../models/userSchema')
 const Coupon = require('../../models/couponSchema')
-
+const Order = require('../../models/orderSchema')
 
 
 
@@ -74,7 +74,6 @@ const viewCheckout = async (req, res) => {
 const applyCoupon = async (req, res) => { 
   try { 
     const { couponCode } = req.body; 
-    console.log('couponCode:', couponCode);
     
     if (!req.session || !req.session.user) {
       return res.status(401).json({
@@ -98,7 +97,14 @@ const applyCoupon = async (req, res) => {
       }); 
     } 
 
-    if (coupon.userId.includes(user)) { 
+    // Check if user has used this coupon in any completed order
+    const usedInOrder = await Order.findOne({
+      userId: user,
+      'coupon.code': couponCode,
+      status: { $in: ['completed', 'delivered'] }
+    })
+
+    if (usedInOrder) { 
       return res.status(400).json({  
         success: false,  
         message: 'You have already used this coupon'  
@@ -122,15 +128,6 @@ const applyCoupon = async (req, res) => {
         message: `Minimum purchase of ₹${coupon.minimumPrice} required`  
       }); 
     } 
-    console.log('subTotal:', subTotal);
-
-    if (couponCode && coupon.offerPrice > 0) {  
-      await Coupon.findOneAndUpdate(
-        { couponCode: couponCode },
-        { $push: { userId: user } },
-        { new: true }
-      );
-    }
 
     return res.status(200).json({ 
       success: true, 
