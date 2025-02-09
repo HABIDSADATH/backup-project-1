@@ -11,6 +11,7 @@ const bannerController = require('../controllers/admin/bannerController')
 const orderController = require('../controllers/admin/orderController')
 const couponController = require('../controllers/admin/couponController')
 const salesReportController = require('../controllers/admin/salesReportController')
+const adminWalletController = require('../controllers/admin/adminWalletController')
 const multer = require('multer')
 const storage = require('../helpers/multer')
 const uploads = multer({storage:storage})
@@ -64,7 +65,8 @@ router.get('/orders/filter',isAuthenticated,orderController.getFilteredOrders);
 router.get('/orders/sales-report',isAuthenticated,orderController.getSalesReport);
 router.post('/order/cancel',isAuthenticated,orderController. cancelOrder);
 router.get('/order/:orderId',isAuthenticated,orderController.getOrderDetails);
-router.post('/order/update-return-status',isAuthenticated,orderController.updateReturnStatus);
+router.post('/order/update-item-return-status',isAuthenticated,orderController.updateReturnStatus);
+
 
 //coupon management
 router.get('/coupon',isAuthenticated,couponController.loadCoupon)
@@ -76,5 +78,13 @@ router.delete('/deleteCoupon',isAuthenticated,couponController.deleteCoupon)
 //sales report management
 router.get('/sales-report',isAuthenticated,salesReportController.getSalesReport)
 router.get('/sales-report/export',isAuthenticated,salesReportController.exportSalesReport)
+
+//admin wallet management
+router.get('/transactions', isAuthenticated, adminWalletController.getTransactions);
+router.get('/transactions/:transactionId', isAuthenticated, adminWalletController.getTransactionDetails);
+
+//dashboard management
+router.get('/dashboard', isAuthenticated, adminController.loadDashboard);
+router.get('/dashboard-data',isAuthenticated,adminController.getDashboardData);
 
 module.exports = router

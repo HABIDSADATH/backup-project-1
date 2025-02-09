@@ -1,9 +1,6 @@
+const Wallet = require('../models/walletSchema');
+const AdminWallet = require('../models/adminWalletTransactionSchema');
 
-
-
-
-
-const Wallet = require('../models/walletSchema')
 const getOrCreateWallet = async (userId) => {
   let wallet = await Wallet.findOne({ userId });
   if (!wallet) {
@@ -15,7 +12,7 @@ const getOrCreateWallet = async (userId) => {
 
 const addWalletTransaction = async (userId, amount, type, description, orderId) => {
   const wallet = await getOrCreateWallet(userId);
-  
+
   const transaction = {
     amount,
     type,
@@ -38,7 +35,44 @@ const addWalletTransaction = async (userId, amount, type, description, orderId) 
   return wallet;
 };
 
+const processRefund = async (userId, refundAmount, orderId) => {
+  try {
+    
+    await addWalletTransaction(
+      userId,
+      refundAmount,
+      "credit",
+      `Refund for returned product in order #${orderId}`,
+      orderId
+    );
+
+    
+    let adminWallet = await AdminWallet.findOne();
+    if (!adminWallet) {
+      adminWallet = new AdminWallet();
+    }
+
+    const transaction = {
+      user: userId,
+      amount: refundAmount,
+      type: 'debit',
+      description: `Refund for returned product in order #${orderId}`,
+      orderId: orderId,
+      status: 'completed'
+    };
+
+    adminWallet.transactions.push(transaction);
+    adminWallet.balance -= refundAmount;
+    await adminWallet.save();
+
+  } catch (walletError) {
+    console.error("Wallet transaction error:", walletError);
+    throw walletError;
+  }
+};
+
 module.exports = {
   getOrCreateWallet,
-  addWalletTransaction
-}
+  addWalletTransaction,
+  processRefund
+};

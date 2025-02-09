@@ -87,17 +87,19 @@ const viewCart = async (req, res) => {
     const user = req.session.user;
     const userData = await User.findById(user);
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
     const cart = await Cart.findOne({ userId: user }).populate('items.productId');
 
     if (!cart || cart.items.length === 0) {
-      return res.render('cart', { cartItems: [], user: userData, message: 'Your cart is empty' });
+      return res.render('cart', { cartItems: [], user: userData, message: 'Your cart is empty', currentPage: page, totalPages: 0 });
     }
 
-    
     const updatedItems = await Promise.all(cart.items.map(async (item) => {
       const product = await Product.findById(item.productId);
       if (!product || product.quantity <= 0) {
-        
         await Cart.updateOne(
           { userId: user },
           { $pull: { items: { productId: item.productId } } }
@@ -114,11 +116,12 @@ const viewCart = async (req, res) => {
       };
     }));
 
-    
     const cartItems = updatedItems.filter(item => item !== null);
+    const totalItems = cartItems.length;
+    const paginatedItems = cartItems.slice(skip, skip + limit);
+    const totalPages = Math.ceil(totalItems / limit);
 
-    
-    res.render('cart', { cartItems, user: userData });
+    res.render('cart', { cartItems: paginatedItems, user: userData, currentPage: page, totalPages });
   } catch (error) {
     console.error("Error fetching cart:", error);
     res.status(500).render('error', { message: 'Internal Server Error' });

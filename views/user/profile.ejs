@@ -449,7 +449,7 @@
                               <th>Date</th>
                               <th>Status</th>
                               <th>Total</th>
-                              <th>Actions</th>
+                              
                             </tr>
                           </thead>
                           <tbody>
@@ -491,15 +491,7 @@
                                 <td><%= new Date(order.invoiceDate).toLocaleDateString() %></td>
                                 <td><%= order.status %></td>
                                 <td>₹<%= order.finalAmount %></td>
-                                <td>
-                                  <% if (order.status === 'pending' || order.status === 'processing') { %>
-                                    <form id="cancelOrderForm-<%= order._id %>" action="/cancel-order/<%= order._id %>" method="POST" style="display:inline;">
-                                      <button type="button" class="btn btn-danger btn-sm cancelOrderButton" data-order-id="<%= order._id %>">Cancel Order</button>
-                                    </form>
-                                  <% } else { %>
-                                    <span class="text-muted"><%=order.status%></span>
-                                  <% } %>
-                                </td>
+                                
                               </tr>
                             <% }) %>
                           </tbody>
@@ -578,76 +570,7 @@ document.getElementById('editProfileForm').addEventListener('submit', async (e) 
 });
 
 
-document.addEventListener('DOMContentLoaded', function () {
-  const cancelButtons = document.querySelectorAll('.cancelOrderButton');
 
-  cancelButtons.forEach(button => {
-    button.addEventListener('click', function () {
-      const orderId = this.getAttribute('data-order-id');
-      const form = document.getElementById(`cancelOrderForm-${orderId}`);
-      
-      Swal.fire({
-        title: 'Cancel Order',
-        html: `
-          <textarea id="cancellationReason" class="swal2-textarea" placeholder="Please provide a reason for cancellation" rows="4"></textarea>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Confirm Cancel',
-        preConfirm: () => {
-          const reason = document.getElementById('cancellationReason').value;
-          if (!reason) {
-            Swal.showValidationMessage('Please provide a cancellation reason');
-            return false;
-          }
-          return reason;
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const cancellationReason = result.value;
-          
-          fetch(form.action, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-              cancellationReason: cancellationReason 
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status) {
-              Swal.fire(
-                'Cancelled!',
-                data.message,
-                'success'
-              ).then(() => {
-                location.reload(); 
-              });
-            } else {
-              Swal.fire(
-                'Error!',
-                data.message,
-                'error'
-              );
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            Swal.fire(
-              'Error!',
-              'Internal server error',
-              'error'
-            );
-          });
-        }
-      });
-    });
-  });
-});
   </script>
 
 <%- include("../../views/partials/user/footer") %>

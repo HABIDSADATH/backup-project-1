@@ -15,11 +15,7 @@ router.get('/pageNotFound',userController.pageNotFound)
 //sign up managemant
 router.get('/',userController.loadHomePage)
 router.get('/shop',userAuth,userController.loadShopingPage)
-router.get('/filter',userAuth,userController.filerProduct)
-router.get('/filterPrice',userAuth,userController.filterByPrice)
-router.post('/search',userAuth,userController.searchProducts)
-router.get('/alphabeticSort', userAuth,userController.alphabeticSort)
-router.get('/latestSort',userAuth,userController.latestSort)
+router.post('/applyFilters', userAuth, userController.applyFilters);
 
 
 // Cart Management 
@@ -34,13 +30,16 @@ router.put('/updateCartQuantity',userAuth,cartController.updateCartQuantity)
 router.get('/checkout',userAuth,checkoutController.viewCheckout)
 router.post('/create-razorpay-order',userAuth,orderController.createOrder);
 router.post('/verify-payment',userAuth,orderController.verifyPayment);
+router.post('/api/address/add', userAuth,checkoutController.addAddress)
 
 
 //order Management
 router.post('/placeOrder',userAuth,orderController.placeOrder)
 router.get('/order/:orderId',userAuth,orderController.getOrderDetails)
-router.post('/cancel-order/:orderId',userAuth,orderController.cancelOrder)
-router.post('/orders/:orderId/return',userAuth,orderController.requestReturn);
+router.post('/orders/:orderId/cancel-item',userAuth,orderController.cancelOrder)
+router.post('/orders/:orderId/return-item',userAuth,orderController.requestReturn);
+router.get('/thankyou/:orderId',userAuth,orderController.renderThankYouPage)
+router.get('/orders/:orderId/invoice',userAuth,orderController.generateOrderInvoice);
 
 router.get('/pageNotFound',userController.pageNotFound)
 router.get('/signup',userLogin,userController.loadSignup)

@@ -46,22 +46,28 @@ const addToWishlist = async (req, res) => {
   }
 }
 
-const removeProduct = async(req,res)=>{
+const removeProduct = async (req, res) => {
   try {
-
-    const productId = req.query.id
-    const userId = req.session.user
-    const user = await User.findById(userId)
-    const index = user.wishlist.indexOf(productId)
-    user.wishlist.splice(index, 1)
-    await user.save()
-    return res.redirect('/wishlist')
-    
+    const productId = req.query.id;
+    const userId = req.session.user;
+    const user = await User.findById(userId);
+    const index = user.wishlist.indexOf(productId);
+    if (index > -1) {
+      user.wishlist.splice(index, 1);
+      await user.save();
+      return res.json({ success: true, message: 'Product removed from wishlist.' });
+    } else {
+      return res.json({ success: false, message: 'Product not found in wishlist.' });
+    }
   } catch (error) {
-    console.error('error in removing from wihslist',error)
-    return res.redirect('/pageNotFound')
+    console.error('Error in removing from wishlist', error);
+    return res.json({ success: false, message: 'Server error.' });
   }
-}
+};
+
+module.exports = {
+  removeProduct,
+};
 
 
 module.exports = {

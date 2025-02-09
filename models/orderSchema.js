@@ -23,6 +23,40 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      status: {
+        type: String,
+        enum: [
+          'pending', 
+          'processing', 
+          'shipped', 
+          'delivered', 
+          'cancelled', 
+          'return_requested', 
+          'returned', 
+        ],
+        default: 'pending',
+      },
+      returnReason: {
+        type: String, 
+      },
+      cancellationReason: {
+        type: String,
+        required: function () {
+          return this.status === 'cancelled';
+        },
+      },
+      cancelledAt: {
+        type: Date,
+      },
+      refundStatus: {
+        type: String,
+        enum: ['pending', 'processing', 'completed', 'failed'],
+        default: 'pending',
+      },
+      refundAmount: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   totalPrice: {
@@ -49,15 +83,15 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      'pending',
-      'processing',
-      'shipped',
-      'Delivered',
-      'Cancelled',
-      'Return Request',
-      'Returned',
+      'pending', 
+      'processing', 
+      'shipped', 
+      'delivered', 
+      'cancelled', 
+      'return_requested',
+      'returned', 
     ],
-    default: 'pending', 
+    default: 'pending',
   },
   createdOn: {
     type: Date,
@@ -75,60 +109,23 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['cod', 'online'], 
+    enum: ['cod', 'online'],
     required: true,
   },
   razorpayOrderId: {
-    type: String, 
+    type: String,
   },
   razorpayPaymentId: {
-    type: String, 
+    type: String,
   },
   razorpaySignature: {
-    type: String, 
+    type: String,
   },
   isPaid: {
     type: Boolean,
-    default: false, 
+    default: false,
   },
-  return: {
-    isRequested: {
-      type: Boolean,
-      default: false
-    },
-    requestDate: {
-      type: Date
-    },
-    reason: {
-      type: String
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'approved', 'rejected', 'completed'],
-    },
-    returnedDate: {
-      type: Date
-    },
-    refundStatus: {
-      type: String,
-      enum: ['pending', 'processing', 'completed', 'failed'],
-    },
-    refundAmount: {
-      type: Number
-    }
-  },
-  cancellation: {
-    reason: {
-      type: String,
-      required: function() { 
-        return this.status === 'Cancelled'; 
-      }
-    },
-    cancelledAt: {
-      type: Date
-    }
-  }
-})
+});
 
 const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

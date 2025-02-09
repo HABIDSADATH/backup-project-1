@@ -1,16 +1,16 @@
-
-
-
-
-
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const walletTransactionSchema = new Schema({
+const adminWalletTransactionSchema = new Schema({
   transactionId: {
     type: String,
     default: () => require('uuid').v4(),
     unique: true
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   amount: {
     type: Number,
@@ -25,12 +25,10 @@ const walletTransactionSchema = new Schema({
     type: String,
     required: true
   },
-  
   orderId: {
     type: Schema.Types.ObjectId,
     ref: 'Order'
   },
-  
   status: {
     type: String,
     enum: ['pending', 'completed', 'failed'],
@@ -39,27 +37,16 @@ const walletTransactionSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  },
-
+  }
 });
 
-const walletSchema = new Schema({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
-  },
+const adminWalletSchema = new Schema({
   balance: {
     type: Number,
     default: 0,
     min: 0  
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  transactions: [walletTransactionSchema],
+  transactions: [adminWalletTransactionSchema],
   createdAt: {
     type: Date,
     default: Date.now
@@ -70,11 +57,10 @@ const walletSchema = new Schema({
   }
 });
 
-
-walletSchema.pre('save', function(next) {
+adminWalletSchema.pre('save', function(next) {
   this.lastUpdated = Date.now();
   next();
 });
 
-const Wallet = mongoose.model('Wallet', walletSchema);
-module.exports = Wallet;
+const AdminWallet = mongoose.model('AdminWallet', adminWalletSchema);
+module.exports = AdminWallet;

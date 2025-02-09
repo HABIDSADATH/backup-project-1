@@ -2,7 +2,10 @@
 
 
 
-<%-include("../../views/partials/admin/header")%>
+
+
+
+  <%- include("../../views/partials/admin/header") %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,6 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Content</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -189,45 +193,246 @@
   </style>
 </head>
 <body>
-  <!-- Main content wrapper -->
   <div class="main-content">
     <!-- Stats Section -->
     <div class="dashboard-stats">
       <div class="stat-card">
         <div class="icon">
-          <i class="fas fa-shopping-bag"></i>
-        </div>
-        <h3>2,451</h3>
-        <p>Total Products</p>
-      </div>
-      <div class="stat-card">
-        <div class="icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <h3>1,257</h3>
-        <p>Total Customers</p>
-      </div>
-      <div class="stat-card">
-        <div class="icon">
           <i class="fas fa-shopping-cart"></i>
         </div>
-        <h3>328</h3>
-        <p>New Orders</p>
+        <h3><%= totalOrders %></h3>
+        <p>Total Orders</p>
       </div>
       <div class="stat-card">
         <div class="icon">
           <i class="fas fa-dollar-sign"></i>
         </div>
-        <h3>$13,245</h3>
+        <h3>₹<%= totalRevenue.toLocaleString() %></h3>
         <p>Total Revenue</p>
+      </div>
+      <!-- Add more stat cards as needed -->
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-12 col-xl-10 " style="width: 100%;"> <!-- Changed to col-xl-10 for slightly wider chart -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title">Sales Analytics</h5>
+            <select id="timeFrame" class="form-select" style="width: auto;">
+              <option value="yearly">Yearly</option>
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <canvas id="salesChart" height="280"></canvas> <!-- Slightly increased height -->
+          </div>
+        </div>
       </div>
     </div>
 
-   
-    
+    <!-- Top Products, Categories, and Brands Section -->
+    <div class="row">
+      <!-- Top Products -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title">Top Products</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Sales</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% topProducts.forEach(product => { %>
+                    <tr>
+                      <td><%= product.productDetails.productName %></td>
+                      <td><%= product.totalQuantity %></td>
+                      <td>₹<%= product.totalRevenue.toLocaleString() %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Categories -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title">Top Categories</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Sales</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% topCategories.forEach(category => { %>
+                    <tr>
+                      <td><%= category.categoryName %></td>
+                      <td><%= category.totalSales %></td>
+                      <td>₹<%= category.totalRevenue.toLocaleString() %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Brands -->
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title">Top Brands</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Brand</th>
+                    <th>Sales</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% topBrands.forEach(brand => { %>
+                    <tr>
+                      <td><%= brand._id %></td>
+                      <td><%= brand.totalSales %></td>
+                      <td>₹<%= brand.totalRevenue.toLocaleString() %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <script>
+    let salesChart;
+    
+    function formatLabel(dateStr, timeFrame) {
+      const date = new Date(dateStr);
+      switch(timeFrame) {
+        case 'yearly':
+          return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        case 'monthly':
+        case 'weekly':
+          return date.toLocaleString('default', { day: 'numeric', month: 'short' });
+        default:
+          return dateStr;
+      }
+    }
+    
+    function initializeChart(data) {
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      const timeFrame = document.getElementById('timeFrame').value;
+      
+      if (salesChart) {
+        salesChart.destroy();
+      }
+    
+      salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(item => formatLabel(item._id, timeFrame)),
+          datasets: [{
+            label: 'Revenue',
+            data: data.map(item => item.revenue),
+            backgroundColor: '#f7444e',
+            borderRadius: 3,
+            barPercentage: 0.3,  // Significantly reduced bar width
+            categoryPercentage: 0.8  // Adjusted category spacing
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Revenue (₹)',
+                font: {
+                  size: 12
+                }
+              },
+              ticks: {
+                font: {
+                  size: 11
+                },
+                callback: function(value) {
+                  return '₹' + value.toLocaleString('en-IN', {
+                    maximumFractionDigits: 0,
+                    notation: 'compact',
+                    compactDisplay: 'short'
+                  });
+                }
+              }
+            },
+            x: {
+              ticks: {
+                font: {
+                  size: 11
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return 'Revenue: ₹' + context.parsed.y.toLocaleString('en-IN');
+                }
+              }
+            },
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+    
+    function updateChart() {
+      const timeFrame = document.getElementById('timeFrame').value;
+      
+      fetch(`/admin/dashboard-data?timeFrame=${timeFrame}`)
+        .then(response => response.json())
+        .then(data => {
+          initializeChart(data);
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+    
+    // Event listener for timeframe changes
+    document.getElementById('timeFrame').addEventListener('change', updateChart);
+    
+    // Initial chart load
+    updateChart();
+    </script>
 </body>
 </html>
 
-  <%-include("../../views/partials/admin/footer")%>
+<%- include("../../views/partials/admin/footer") %>

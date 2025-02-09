@@ -144,7 +144,46 @@ const applyCoupon = async (req, res) => {
   } 
 };
 
+const addAddress = async (req, res) => {
+  try {
+      const user = req.session.user;
+      const userData = await User.findOne({ _id: user });
+      const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
 
+      const userAddress = await Address.findOne({ userId: userData._id });
+      let newAddressData;
+
+      if (!userAddress) {
+          const newAddress = new Address({
+              userId: userData._id,
+              address: [{
+                  addressType, name, city, landMark, state, pincode, phone, altPhone
+              }]
+          });
+          await newAddress.save();
+          newAddressData = newAddress.address[0];
+      } else {
+          const addressObj = {
+              addressType, name, city, landMark, state, pincode, phone, altPhone
+          };
+          userAddress.address.push(addressObj);
+          await userAddress.save();
+          newAddressData = userAddress.address[userAddress.address.length - 1];
+      }
+
+      res.json({
+          success: true,
+          address: newAddressData
+      });
+
+  } catch (error) {
+      console.log('Error adding address:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Failed to add address'
+      });
+  }
+};
 
 
 
@@ -152,5 +191,5 @@ const applyCoupon = async (req, res) => {
 module.exports = {
   viewCheckout,
   applyCoupon,
-
+  addAddress
 }

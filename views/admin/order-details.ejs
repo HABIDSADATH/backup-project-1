@@ -191,6 +191,7 @@
             <th>Price</th>
             <th>Quantity</th>
             <th>Total</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -207,22 +208,42 @@
             <td>₹<%= item.price?.toLocaleString() || 0 %></td>
             <td><%= item.quantity %></td>
             <td>₹<%= (item.price * item.quantity)?.toLocaleString() || 0 %></td>
+            <td>
+              <span class="status-badge status-<%= item.status.toLowerCase() %>">
+                <%= item.status.replace('_', ' ').toUpperCase() %>
+              </span>
+            </td>
           </tr>
           <% }) %>
         </tbody>
         <tfoot>
+          <%if(order.totalPrice!=0){%>
           <tr>
-            <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+            <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
             <td>₹<%= order.totalPrice?.toLocaleString() || 0 %></td>
           </tr>
           <tr>
-            <td colspan="4" class="text-end"><strong>Discount:</strong></td>
+            <td colspan="5" class="text-end"><strong>Discount:</strong></td>
             <td>₹<%= order.discount?.toLocaleString() || 0 %></td>
           </tr>
           <tr>
-            <td colspan="4" class="text-end"><strong>Final Amount:</strong></td>
+            <td colspan="5" class="text-end"><strong>Final Amount:</strong></td>
             <td>₹<%= order.finalAmount?.toLocaleString() || 0 %></td>
           </tr>
+          <%}else{%>
+            <tr>
+              <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
+              <td>₹ 0 </td>
+            </tr>
+            <tr>
+              <td colspan="5" class="text-end"><strong>Discount:</strong></td>
+              <td>₹ 0 </td>
+            </tr>
+            <tr>
+              <td colspan="5" class="text-end"><strong>Final Amount:</strong></td>
+              <td>₹ 0 </td>
+            </tr>
+            <%}%>
         </tfoot>
       </table>
     </div>
@@ -232,7 +253,7 @@
   <div class="order-card">
     <div class="section-title">Order Timeline</div>
     <div class="timeline">
-      <% const statusOrder = ['pending', 'processing', 'shipped', 'Delivered']; %>
+      <% const statusOrder = ['pending', 'processing', 'shipped', 'delivered']; %>
       <% statusOrder.forEach(status => { %>
         <div class="timeline-item">
           <div class="info-value"><%= status.charAt(0).toUpperCase() + status.slice(1) %></div>
@@ -265,35 +286,57 @@
     </div>
   </div>
 
-  <!-- Return Request Card -->
-<% if (order.return?.isRequested) { %>
-  <div class="order-card">
-    <div class="section-title">Return Request</div>
-    <div class="info-grid">
-      <div class="info-item">
-        <div class="info-label">Request Date</div>
-        <div class="info-value"><%= new Date(order.return.requestDate).toLocaleDateString() %></div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Status</div>
-        <div class="info-value">
-          <span class="status-badge status-<%= order.return.status?.toLowerCase() %>">
-            <%= order.return.status %>
-          </span>
-        </div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Reason</div>
-        <div class="info-value"><%= order.return.reason %></div>
-      </div>
+
+
+<div class="order-card">
+  <div class="section-title">Return Requested Items</div>
+  <% const returnRequestedItems = order.orderItems.filter(item => item.status == 'return_requested') %>
+  <% if (returnRequestedItems.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Return Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% returnRequestedItems.forEach(item => { %>
+            <tr>
+              <td>
+                <% if (item.productDetails?.productImages?.[0]) { %>
+                  <img src="/uploads/re-image/<%= item.productDetails.productImages[0] %>" 
+                       alt="Product Image" 
+                       class="product-image">
+                <% } %>
+              </td>
+              <td><%= item.productDetails?.productName || 'N/A' %></td>
+              <td>₹<%= item.price?.toLocaleString() || 0 %></td>
+              <td><%= item.quantity %></td>
+              <td>
+                <span class="status-badge status-<%= item.status.toLowerCase() %>">
+                  <%= item.returnReason.replace('_', ' ').toUpperCase() %>
+                </span>
+              </td>
+              <td>
+                <button 
+                  onclick="updateItemReturnStatus('<%= order.orderId %>', '<%= item.product %>')" 
+                  class="btn btn-sm btn-primary">
+                  <i class="fas fa-sync-alt"></i> Update Status
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
+  <% } else { %>
     
-    <div class="mt-4">
-      <button onclick="updateReturnStatus('<%= order.orderId %>')" class="btn btn-primary">
-        <i class="fas fa-sync-alt"></i> Update Return Status
-      </button>
-    </div>
-  </div>
+    <p class="text-muted">No return requests found.</p>
   <% } %>
 </div>
 
@@ -306,8 +349,8 @@ async function updateStatus(orderId) {
       'pending': 'Pending',
       'processing': 'Processing',
       'shipped': 'Shipped',
-      'Delivered': 'Delivered',
-      'Cancelled': 'Cancelled'
+      'delivered': 'delivered',
+      'cancelled': 'cancel                                                led'
     },
     inputPlaceholder: 'Select status',
     showCancelButton: true
@@ -373,15 +416,15 @@ async function cancelOrder(orderId) {
   }
 }
 
-async function updateReturnStatus(orderId) {
+
+async function updateItemReturnStatus(orderId, productId) {
   const { value: status } = await Swal.fire({
     title: 'Update Return Status',
     input: 'select',
     inputOptions: {
-      'pending': 'Pending',
-      'approved': 'Approved',
-      'rejected': 'Rejected',
-      'completed': 'Completed'
+      'return_requested': 'Return Requested',
+      'returned': 'Returned',
+      'delivered':'Rejected'
     },
     inputPlaceholder: 'Select status',
     showCancelButton: true
@@ -389,12 +432,16 @@ async function updateReturnStatus(orderId) {
 
   if (status) {
     try {
-      const response = await fetch('/admin/order/update-return-status', {
+      const response = await fetch('/admin/order/update-item-return-status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ orderId, status })
+        body: JSON.stringify({ 
+          orderId, 
+          productId,
+          status 
+        })
       });
 
       const data = await response.json();

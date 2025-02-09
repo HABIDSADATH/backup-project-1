@@ -1,0 +1,187 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .content {
+    padding: 30px;
+    background-color: #f8f9fa;
+  }
+
+  .page-title {
+    color: var(--dark);
+    font-size: 1.75rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+  }
+
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .table td {
+    padding: 15px;
+    vertical-align: middle;
+  }
+
+  .transaction-type-credit {
+    color: green;
+    font-weight: 600;
+  }
+
+  .transaction-type-debit {
+    color: red;
+    font-weight: 600;
+  }
+
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .details-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-top: 25px;
+  }
+
+  .details-card h4 {
+    color: var(--dark);
+    font-size: 1.25rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  .details-card p {
+    margin-bottom: 10px;
+  }
+</style>
+
+<div class="content">
+  <h3 class="page-title">Transaction Management</h3>
+  
+  <!-- Search Bar -->
+  <div class="search-container">
+    <form action="/admin-wallet/transactions" method="get">
+      <div class="input-group">
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control" 
+          placeholder="Search transactions..." 
+          value=""
+        >
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-search"></i> Search
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>Transaction Date</th>
+            <th>User</th>
+            <th>Transaction Type</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (transactions.length > 0) { %>
+            <% transactions.forEach(transaction => { %>
+              <tr>
+                <td><a href="/transactions/<%=transaction.transactionId%>"><%= transaction.transactionId %></a></td>
+                <td><%= new Date(transaction.transactionDate).toLocaleString() %></td>
+                <td><%= transaction.user.name %></td>
+                <td>
+                  <% if (transaction.type === 'credit') { %>
+                    <span class="transaction-type-credit">Credited</span>
+                  <% } else { %>
+                    <span class="transaction-type-debit">Debited</span>
+                  <% } %>
+                </td>
+                <td>₹<%= transaction.amount %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="5">No transactions found</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Transaction Details -->
+  <% if (transactionDetails) { %>
+    <div class="details-card">
+      <h4>Transaction Information</h4>
+      <p><strong>Transaction ID:</strong> <%= transactionDetails.transactionId %></p>
+      <p><strong>Transaction Date:</strong> <%= new Date(transactionDetails.transactionDate).toLocaleString() %></p>
+      <p><strong>User:</strong> <%= transactionDetails.user.name %></p>
+      <p><strong>Transaction Type:</strong> <%= transactionDetails.type %></p>
+      <p><strong>Amount:</strong> ₹<%= transactionDetails.amount %></p>
+      <p><strong>Description:</strong> <%= transactionDetails.description %></p>
+      <% if (transactionDetails.orderId) { %>
+        <p><strong>Order ID:</strong> <a href="/admin/order/<%= transactionDetails.orderId %>"><%= transactionDetails.orderId %></a></p>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<%- include("../../views/partials/admin/footer") %>
