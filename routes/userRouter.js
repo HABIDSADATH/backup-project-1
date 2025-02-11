@@ -109,4 +109,6 @@ router.get('/removeFromWishlist',userAuth,wishlistController.removeProduct)
 //coupon management
 router.post('/apply-coupon',userAuth,checkoutController.applyCoupon)
 
+
+
 module.exports = router;

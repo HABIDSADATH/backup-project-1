@@ -1,8 +1,3 @@
-
-
-
-
-
 const AdminWallet = require('../../models/adminWalletTransactionSchema');
 const User = require('../../models/userSchema');
 
@@ -27,7 +22,7 @@ const getTransactions = async (req, res) => {
       status: transaction.status
     }));
 
-    // Render the page without transaction details initially
+    
     return res.render('transactions', {
       success: true,
       transactions,
@@ -45,7 +40,6 @@ const getTransactions = async (req, res) => {
 };
 
 const getTransactionDetails = async (req, res) => {
-  console.log('transaction details')
   try {
     const { transactionId } = req.params;
     const adminWallet = await AdminWallet.findOne({ 'transactions.transactionId': transactionId }).populate('transactions.user transactions.orderId');
@@ -63,7 +57,7 @@ const getTransactionDetails = async (req, res) => {
       return res.status(404).render('transactions', {
         success: false,
         message: 'Transaction not found',
-        transactions: [],
+        transactions: adminWallet.transactions,
         transactionDetails: null
       });
     }
@@ -78,19 +72,9 @@ const getTransactionDetails = async (req, res) => {
       orderId: transaction.orderId
     };
 
-    // Fetch all transactions again
-    const transactions = adminWallet.transactions.map(transaction => ({
-      transactionId: transaction.transactionId,
-      transactionDate: transaction.createdAt,
-      user: transaction.user,
-      type: transaction.type,
-      amount: transaction.amount,
-      status: transaction.status
-    }));
-
     return res.render('transactions', {
       success: true,
-      transactions,
+      transactions: adminWallet.transactions,
       transactionDetails
     });
   } catch (error) {

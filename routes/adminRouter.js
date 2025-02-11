@@ -81,7 +81,8 @@ router.get('/sales-report/export',isAuthenticated,salesReportController.exportSa
 
 //admin wallet management
 router.get('/transactions', isAuthenticated, adminWalletController.getTransactions);
-router.get('/transactions/:transactionId', isAuthenticated, adminWalletController.getTransactionDetails);
+router.get('/transactions/:transactionId', adminWalletController.getTransactionDetails)
+
 
 //dashboard management
 router.get('/dashboard', isAuthenticated, adminController.loadDashboard);

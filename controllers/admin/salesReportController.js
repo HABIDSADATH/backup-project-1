@@ -6,101 +6,118 @@
 const Order = require('../../models/orderSchema')
 
 const getSalesReport = async (req, res) => {
-  try {
+    try {
       const { startDate, endDate, reportType } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = 4; // Adjust limit as needed
       let query = {};
       let dateRange = {};
-
+  
+      // Your existing date range logic
       switch (reportType) {
-          case 'daily':
-              dateRange = {
-                  startDate: new Date(new Date().setHours(0, 0, 0, 0)),
-                  endDate: new Date(new Date().setHours(23, 59, 59, 999))
-              };
-              break;
-          case 'weekly':
-              const weekStart = new Date();
-              weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-              weekStart.setHours(0, 0, 0, 0);
-              dateRange = {
-                  startDate: weekStart,
-                  endDate: new Date()
-              };
-              break;
-          case 'monthly':
-              const monthStart = new Date();
-              monthStart.setDate(1);
-              monthStart.setHours(0, 0, 0, 0);
-              dateRange = {
-                  startDate: monthStart,
-                  endDate: new Date()
-              };
-              break;
-          case 'custom':
-              dateRange = {
-                  startDate: new Date(startDate),
-                  endDate: new Date(endDate)
-              };
-              break;
-          default:
-              dateRange = {
-                  startDate: new Date(new Date().setHours(0, 0, 0, 0)),
-                  endDate: new Date(new Date().setHours(23, 59, 59, 999))
-              };
+        case 'daily':
+          dateRange = {
+            startDate: new Date(new Date().setHours(0, 0, 0, 0)),
+            endDate: new Date(new Date().setHours(23, 59, 59, 999))
+          };
+          break;
+        case 'weekly':
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          dateRange = {
+            startDate: weekStart,
+            endDate: new Date()
+          };
+          break;
+        case 'monthly':
+          const monthStart = new Date();
+          monthStart.setDate(1);
+          monthStart.setHours(0, 0, 0, 0);
+          dateRange = {
+            startDate: monthStart,
+            endDate: new Date()
+          };
+          break;
+        case 'custom':
+          dateRange = {
+            startDate: new Date(startDate),
+            endDate: new Date(endDate)
+          };
+          break;
+        default:
+          dateRange = {
+            startDate: new Date(new Date().setHours(0, 0, 0, 0)),
+            endDate: new Date(new Date().setHours(23, 59, 59, 999))
+          };
       }
-
-      
+  
       query = {
-          createdOn: {
-              $gte: dateRange.startDate,
-              $lte: dateRange.endDate
-          },
-          status: { $nin: ['cancelled'] } 
-      }
-
-      const orders = await Order.find(query).sort({ createdOn: -1 });
-
-      const reportData = {
-          totalOrders: orders.length,
-          totalSales: orders.reduce((sum, order) => sum + (order.finalAmount || 0), 0),
-          totalDiscount: orders.reduce((sum, order) => sum + (order.discount || 0), 0),
-          couponDiscount: orders.reduce((sum, order) => {
-              if (order.couponApplied) {
-                  return sum + ((order.totalPrice - order.finalAmount) || 0);
-              }
-              return sum;
-          }, 0),
-          orders: orders.map(order => ({
-              orderId: order.orderId,
-              date: order.createdOn,
-              amount: order.finalAmount,
-              discount: order.discount,
-              status: order.status,
-              paymentMethod: order.paymentMethod
-          }))
+        createdOn: {
+          $gte: dateRange.startDate,
+          $lte: dateRange.endDate
+        },
+        status: { $nin: ['cancelled'] }
       };
-
-      
+  
+      // Get total count for pagination
+      const totalOrders = await Order.countDocuments(query);
+  
+      // Get paginated orders
+      const orders = await Order.find(query)
+        .sort({ createdOn: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+  
+      // Calculate totals from all orders (not just paginated ones)
+      const allOrders = await Order.find(query);
+      const reportData = {
+        totalOrders: allOrders.length,
+        totalSales: allOrders.reduce((sum, order) => sum + (order.finalAmount || 0), 0),
+        totalDiscount: allOrders.reduce((sum, order) => sum + (order.discount || 0), 0),
+        couponDiscount: allOrders.reduce((sum, order) => {
+          if (order.couponApplied) {
+            return sum + ((order.totalPrice - order.finalAmount) || 0);
+          }
+          return sum;
+        }, 0),
+        // Paginated orders for display
+        orders: orders.map(order => ({
+          orderId: order.orderId,
+          date: order.createdOn,
+          amount: order.finalAmount,
+          discount: order.discount,
+          status: order.status,
+          paymentMethod: order.paymentMethod
+        }))
+      };
+  
       if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-          return res.json(reportData);
+        return res.json({
+          ...reportData,
+          currentPage: page,
+          totalPages: Math.ceil(totalOrders / limit)
+        });
       } else {
-          return res.render('sales-report', {
-              reportData,
-              startDate: dateRange.startDate,
-              endDate: dateRange.endDate,
-              reportType,
-              title: 'Sales Report'
-          });
+        return res.render('sales-report', {
+          reportData,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          reportType,
+          title: 'Sales Report',
+          currentPage: page,
+          totalPages: Math.ceil(totalOrders / limit)
+        });
       }
-
-  } catch (error) {
+  
+    } catch (error) {
       console.error('Error generating sales report:', error);
-      res.status(500).json({ 
-          status: false, 
-          message: 'Error generating sales report' 
+      res.status(500).json({
+        status: false,
+        message: 'Error generating sales report'
       });
-  }
-};
+    }
+  };
 
 
 

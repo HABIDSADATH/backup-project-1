@@ -2,23 +2,6 @@
 
 const User = require('../models/userSchema');
 
-// const userAuth = (req, res, next) => {
-//   if (req.session.user) {
-//     return next();
-//   }
-
-//   if (req.session.user && req.session.user.isBlocked) {
-//     req.session.destroy((err) => {
-//       if (err) {
-//         return res.status(500).send("Error in destroying session");
-//       }
-//       return res.redirect('/login');
-//     });
-//   }
-
-//   return res.redirect('/login');
-// };
-
 const userAuth = async (req, res, next) => {
   try {
     

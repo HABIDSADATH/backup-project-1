@@ -35,13 +35,18 @@ const addWalletTransaction = async (userId, amount, type, description, orderId) 
   return wallet;
 };
 
+
 const processRefund = async (userId, refundAmount, orderId) => {
   try {
     
+    refundAmount = Math.floor(refundAmount);
+
+    
+    const wallet = await getOrCreateWallet(userId);
     await addWalletTransaction(
       userId,
       refundAmount,
-      "credit",
+      'credit',
       `Refund for returned product in order #${orderId}`,
       orderId
     );
@@ -52,6 +57,13 @@ const processRefund = async (userId, refundAmount, orderId) => {
       adminWallet = new AdminWallet();
     }
 
+    
+    if (adminWallet.balance < refundAmount) {
+      console.error("Admin wallet balance is insufficient to process the refund for order #", orderId);
+      throw new Error("Admin wallet balance is insufficient to process the refund");
+    }
+
+    
     const transaction = {
       user: userId,
       amount: refundAmount,
@@ -75,4 +87,4 @@ module.exports = {
   getOrCreateWallet,
   addWalletTransaction,
   processRefund
-};
+};  

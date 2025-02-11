@@ -205,16 +205,16 @@
       </div>
       <div class="stat-card">
         <div class="icon">
-          <i class="fas fa-dollar-sign"></i>
+          <i class="fas fa-rupee-sign"></i>
         </div>
-        <h3>₹<%= totalRevenue.toLocaleString() %></h3>
+        <h3><%= totalRevenue.toLocaleString() %></h3>
         <p>Total Revenue</p>
       </div>
       <!-- Add more stat cards as needed -->
     </div>
 
     <div class="row mb-4">
-      <div class="col-12 col-xl-10 " style="width: 100%;"> <!-- Changed to col-xl-10 for slightly wider chart -->
+      <div class="col-12 col-xl-10 " style="width: 100%;"> 
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title">Sales Analytics</h5>
@@ -225,15 +225,15 @@
             </select>
           </div>
           <div class="card-body">
-            <canvas id="salesChart" height="280"></canvas> <!-- Slightly increased height -->
+            <canvas id="salesChart" height="280"></canvas> 
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Top Products, Categories, and Brands Section -->
+    
     <div class="row">
-      <!-- Top Products -->
+      
       <div class="col-md-4 mb-4">
         <div class="card">
           <div class="card-header">
@@ -264,7 +264,7 @@
         </div>
       </div>
 
-      <!-- Top Categories -->
+      
       <div class="col-md-4 mb-4">
         <div class="card">
           <div class="card-header">
@@ -295,7 +295,7 @@
         </div>
       </div>
 
-      <!-- Top Brands -->
+      
       <div class="col-md-4 mb-4">
         <div class="card">
           <div class="card-header">
@@ -361,8 +361,8 @@
             data: data.map(item => item.revenue),
             backgroundColor: '#f7444e',
             borderRadius: 3,
-            barPercentage: 0.3,  // Significantly reduced bar width
-            categoryPercentage: 0.8  // Adjusted category spacing
+            barPercentage: 0.3,  
+            categoryPercentage: 0.8  
           }]
         },
         options: {
@@ -426,10 +426,10 @@
         .catch(error => console.error('Error fetching data:', error));
     }
     
-    // Event listener for timeframe changes
+    
     document.getElementById('timeFrame').addEventListener('change', updateChart);
     
-    // Initial chart load
+    
     updateChart();
     </script>
 </body>

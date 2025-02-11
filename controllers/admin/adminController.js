@@ -8,6 +8,7 @@ const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
 const Brand = require('../../models/brandSchema');
+const AdminWallet = require('../../models/adminWalletTransactionSchema')
 
 const pageerror = async (req,res)=>{
   res.render('admin-error')
@@ -49,14 +50,20 @@ const login = async (req,res)=>{
 const loadDashboard = async (req, res) => {
   if (req.session.admin) {
     try {
-      // Get basic stats
+      
       const totalOrders = await Order.countDocuments();
-      const totalRevenue = await Order.aggregate([
-        { $match: { status: { $nin: ['cancelled', 'returned'] } } },
-        { $group: { _id: null, total: { $sum: '$finalAmount' } } }
-      ]);
+      // const totalRevenue = await Order.aggregate([
+      //   { $match: { status: { $nin: ['cancelled', 'returned'] } } },
+      //   { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      // ]);
 
-      // Get monthly revenue data for the chart
+      const adminWallet = await AdminWallet.findOne();
+      console.log('admin wallet is ',adminWallet.balance)
+      const totalRevenue = adminWallet.balance ? adminWallet.balance : 0;
+
+      
+
+      
       const monthlyRevenue = await Order.aggregate([
         {
           $match: {
@@ -74,7 +81,7 @@ const loadDashboard = async (req, res) => {
         { $sort: { '_id': 1 } }
       ]);
 
-      // Get top 10 selling products
+      
       const topProducts = await Order.aggregate([
         { $unwind: '$orderItems' },
         {
@@ -97,7 +104,7 @@ const loadDashboard = async (req, res) => {
         { $unwind: '$productDetails' }
       ]);
 
-      // Get top categories
+      
       const topCategories = await Order.aggregate([
         { $unwind: '$orderItems' },
         {
@@ -130,7 +137,7 @@ const loadDashboard = async (req, res) => {
         { $limit: 10 }
       ]);
 
-      // Get top brands
+      
       const topBrands = await Order.aggregate([
         { $unwind: '$orderItems' },
         {
@@ -155,7 +162,7 @@ const loadDashboard = async (req, res) => {
 
       res.render('dashboard', {
         totalOrders,
-        totalRevenue: totalRevenue[0]?.total || 0,
+        totalRevenue,
         monthlyRevenue,
         topProducts,
         topCategories,
@@ -168,10 +175,10 @@ const loadDashboard = async (req, res) => {
   }
 };
 
-// Add filter endpoint for charts
+
 const getDashboardData = async (req, res) => {
   try {
-    const { timeFrame } = req.query; // yearly, monthly, weekly
+    const { timeFrame } = req.query; 
     let startDate;
     
     switch(timeFrame) {

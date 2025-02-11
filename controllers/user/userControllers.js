@@ -7,7 +7,7 @@ const Banner = require('../../models/bannerSchema')
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt')
-
+const { getOrCreateWallet, addWalletTransaction } = require('../../utils/walletUtils') 
 
 const loadHomePage = async (req, res) => {
   try {
@@ -117,38 +117,77 @@ async function sendVarificationEmail(email,otp) {
   }
 }
 
-const signup = async (req,res)=>{
-  try {
+// const signup = async (req,res)=>{
+//   try {
 
-    const {name,phone,email,password,cPassword} = req.body
-    if(password !==cPassword){
-      return res.render("signup",{message:"passwords dont match"})
+//     const {name,phone,email,password,cPassword} = req.body
+//     if(password !==cPassword){
+//       return res.render("signup",{message:"passwords dont match"})
+//     }
+
+//     const findUser = await User.findOne({email})
+//     if(findUser){
+//       return res.render("signup",{message:"user with this email already exists"})
+//     }
+
+//     const otp = generateOtp();
+
+//     const emailSend = await sendVarificationEmail(email,otp);
+
+//     if(!emailSend){
+//       return res.json("email-error")
+//     }
+
+//     req.session.userOtp = otp;
+//     req.session.userData = {name,phone,email,password};
+
+//     res.render("verify-otp")
+//     console.log("OTP :",otp)
+    
+//   } catch (error) {
+//     console.error("signup error",error)
+//     res.redirect('/pageNotFound')
+//   }
+// }
+
+const signup = async (req, res) => {
+  try {
+    const { name, phone, email, password, cPassword, referralCode } = req.body;
+    if (password !== cPassword) {
+      return res.render("signup", { message: "Passwords don't match" });
     }
 
-    const findUser = await User.findOne({email})
-    if(findUser){
-      return res.render("signup",{message:"user with this email already exists"})
+    const findUser = await User.findOne({ email });
+    if (findUser) {
+      return res.render("signup", { message: "User with this email already exists" });
+    }
+
+    let referrerId = null;
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode });
+      if (!referrer) {
+        return res.render("signup", { message: "Invalid referral code" });
+      }
+      referrerId = referrer._id;
     }
 
     const otp = generateOtp();
+    const emailSend = await sendVarificationEmail(email, otp);
 
-    const emailSend = await sendVarificationEmail(email,otp);
-
-    if(!emailSend){
-      return res.json("email-error")
+    if (!emailSend) {
+      return res.json("email-error");
     }
 
     req.session.userOtp = otp;
-    req.session.userData = {name,phone,email,password};
+    req.session.userData = { name, phone, email, password, referrerId };
 
-    res.render("verify-otp")
-    console.log("OTP :",otp)
-    
+    res.render("verify-otp");
+    console.log("OTP :", otp);
   } catch (error) {
-    console.error("signup error",error)
-    res.redirect('/pageNotFound')
+    console.error("signup error", error);
+    res.redirect('/pageNotFound');
   }
-}
+};
 
 async function securePassword(password) {
   try {
@@ -161,36 +200,92 @@ async function securePassword(password) {
   }
 }
 
-const verifyOtp = async (req,res)=>{
+// const verifyOtp = async (req,res)=>{
+//   try {
+
+//     const {otp} = req.body
+//     console.log(otp)
+
+//     if(otp === req.session.userOtp){
+//       const user = req.session.userData
+//       const passwordHash = await securePassword(user.password)
+
+//       const saveUserData = new User({
+//         name:user.name,
+//         phone:user.phone,
+//         email:user.email,
+//         password:passwordHash
+//       })
+//       await saveUserData.save()
+//       req.session.user = saveUserData._id;
+//       res.json({success:true,redirectUrl:"/"})
+//     }else{
+//       res.status(400).json({success:false,message:"Invalid otp, Please try again"})
+//     }
+    
+//   } catch (error) {
+
+//     console.error("error verifying otp",error)
+//     res.status(500).json({success:false,message:"an error occurred"})
+    
+//   }
+// }
+
+const verifyOtp = async (req, res) => {
   try {
+    const { otp } = req.body;
+    console.log(otp);
 
-    const {otp} = req.body
-    console.log(otp)
+    if (otp === req.session.userOtp) {
+      const user = req.session.userData;
+      const passwordHash = await securePassword(user.password);
 
-    if(otp === req.session.userOtp){
-      const user = req.session.userData
-      const passwordHash = await securePassword(user.password)
+      const newUser = new User({
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        password: passwordHash,
+        referralCode: user.referralCode
+      });
 
-      const saveUserData = new User({
-        name:user.name,
-        phone:user.phone,
-        email:user.email,
-        password:passwordHash
-      })
-      await saveUserData.save()
-      req.session.user = saveUserData._id;
-      res.json({success:true,redirectUrl:"/"})
-    }else{
-      res.status(400).json({success:false,message:"Invalid otp, Please try again"})
+      await newUser.save();
+
+      if (user.referrerId) {
+        const referrer = await User.findById(user.referrerId);
+        referrer.redeemedUsers.push(newUser._id);
+        await referrer.save();
+
+        
+        await addWalletTransaction(
+          referrer._id,
+          100,
+          'credit',
+          `Referral bonus for referring ${newUser.name}`,
+          null
+        );
+
+        
+        await addWalletTransaction(
+          newUser._id,
+          50,
+          'credit',
+          'Referral bonus on sign-up',
+          null
+        );
+      }
+
+      req.session.user = newUser._id;
+      res.json({ success: true, redirectUrl: "/" });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid OTP, Please try again" });
     }
-    
   } catch (error) {
-
-    console.error("error verifying otp",error)
-    res.status(500).json({success:false,message:"an error occurred"})
-    
+    console.error("error verifying otp", error);
+    res.status(500).json({ success: false, message: "An error occurred" });
   }
-}
+};
+
+
 
 const resendOTP = async (req,res)=>{
   try {

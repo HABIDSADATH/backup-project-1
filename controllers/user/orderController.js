@@ -110,7 +110,7 @@ const placeOrder = async (req, res) => {
       newOrder.razorpayOrderId = razorpayOrder.id;
       await newOrder.save();
 
-      // Empty the cart after order creation
+      
       await Cart.findOneAndUpdate(
         { userId: user },
         { $set: { items: [] } }
@@ -173,7 +173,7 @@ const placeOrder = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in placeOrder:', error);
+    console.error('Error in placeOrder:', error)
     return res.status(500).json({
       success: false,
       message: 'An error occurred while placing the order'
@@ -241,13 +241,12 @@ const getOrderDetails = async (req, res) => {
 
 
 
-
 const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     const { productId, reason: cancellationReason } = req.body;
 
-    const order = await Order.findOne({orderId:orderId});
+    const order = await Order.findOne({ orderId: orderId });
 
     if (!order) {
       return res.status(404).json({
@@ -256,7 +255,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    
     if (!cancellationReason) {
       return res.status(400).json({
         success: false,
@@ -264,7 +262,6 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    
     const productToCancel = order.orderItems.find(
       (item) => item.product.toString() === productId
     );
@@ -283,20 +280,27 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    
+    // Adjust the product quantity in stock
     const product = await Product.findById(productToCancel.product);
     if (product) {
       product.quantity += productToCancel.quantity;
       await product.save();
     }
 
-    
+    // Calculate the prorated discount for the product
+    const totalProductPrice = order.orderItems.reduce((sum, item) => {
+      return sum + item.price * item.quantity;
+    }, 0);
+
+    const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (productToCancel.price * productToCancel.quantity));
+    const productRefundAmount = (productToCancel.price * productToCancel.quantity) - discountPerProduct;
+
     let refundAmount = 0;
     if (order.paymentMethod !== "cod" && order.isPaid) {
-      refundAmount = productToCancel.price * productToCancel.quantity;
+      refundAmount = productRefundAmount;
     }
 
-    
+    // Process the refund if applicable
     if (refundAmount > 0) {
       try {
         const userId = order.userId;
@@ -309,10 +313,16 @@ const cancelOrder = async (req, res) => {
           order._id
         );
 
-        
         let adminWallet = await AdminWallet.findOne();
         if (!adminWallet) {
           adminWallet = new AdminWallet();
+        }
+
+        if (adminWallet.balance < refundAmount) {
+          return res.status(400).json({
+            success: false,
+            message: "Admin wallet balance is insufficient to process the refund",
+          });
         }
 
         const transaction = {
@@ -330,11 +340,14 @@ const cancelOrder = async (req, res) => {
 
       } catch (walletError) {
         console.error("Wallet transaction error:", walletError);
-        
+        return res.status(500).json({
+          success: false,
+          message: "Error processing wallet transaction",
+        });
       }
     }
 
-   
+    
     productToCancel.status = "cancelled";
     productToCancel.cancellationReason = cancellationReason;
     productToCancel.cancelledAt = new Date();
@@ -344,9 +357,8 @@ const cancelOrder = async (req, res) => {
     
     const cancelledProductTotal = productToCancel.price * productToCancel.quantity;
     order.totalPrice -= cancelledProductTotal;
-    order.finalAmount -= cancelledProductTotal;
+    order.finalAmount -= refundAmount;
 
-    
     const allProductsCancelled = order.orderItems.every(
       (item) => item.status === "cancelled"
     );
@@ -354,7 +366,6 @@ const cancelOrder = async (req, res) => {
     order.status = allProductsCancelled ? "cancelled" : order.status;
     order.finalAmount = allProductsCancelled ? 0 : order.finalAmount;
 
-    
     await order.save();
 
     res.json({
@@ -375,7 +386,6 @@ const cancelOrder = async (req, res) => {
 
 
 
-
 const createOrder = async (req, res) => {
   const { amount, currency } = req.body;
 
@@ -392,13 +402,16 @@ const createOrder = async (req, res) => {
           order,
           key: process.env.RAZORPAY_KEY_ID 
       });
+      
   } catch (error) {
       res.status(500).json({ success: false, message: error.message });
   }
 };
 
 const verifyPayment = async (req, res) => {
+  
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+  
 
   const body = razorpay_order_id + '|' + razorpay_payment_id;
   const expectedSignature = crypto
@@ -414,20 +427,20 @@ const verifyPayment = async (req, res) => {
               return res.status(404).json({ success: false, message: 'Order not found' });
           }
 
-          // Update order details
+          
           order.razorpayPaymentId = razorpay_payment_id;
           order.razorpaySignature = razorpay_signature;
           order.isPaid = true; 
           order.status = 'pending'; 
           await order.save();
 
-          // Ensure admin wallet exists
+          
           let adminWallet = await AdminWallet.findOne();
           if (!adminWallet) {
               adminWallet = new AdminWallet();
           }
 
-          // Log transaction in admin wallet
+          
           const transaction = {
               user: order.userId,
               amount: order.finalAmount,
@@ -449,7 +462,7 @@ const verifyPayment = async (req, res) => {
   } else {
       res.status(400).json({ success: false, message: 'Invalid signature!' });
   }
-};
+}
 
 const requestReturn = async (req, res) => {
   try {
@@ -471,7 +484,7 @@ const requestReturn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Return can only be requested for delivered orders.' });
     }
 
-    // Find the specific item in the orderItems array
+    
     const itemToReturn = order.orderItems.find(item => item.product.toString() === productId.toString());
 
     if (!itemToReturn) {
@@ -586,7 +599,7 @@ const generateOrderInvoice = async (req, res) => {
     doc.image(logoPath, 50, 45, { width: 150 })
        .font('Helvetica-Bold')
        .fontSize(20)
-      //  .text('famms', 110, 57)
+      
        .fontSize(10)
        .font('Helvetica')
        .text('1234 Main Street', 200, 65, { align: 'right' })
@@ -659,7 +672,7 @@ const generateOrderInvoice = async (req, res) => {
          .text(`₹ ${itemPrice}`, priceX, position)
          .text(`₹ ${totalPrice}`, amountX, position);
       
-      // Add a light gray line after each row
+      
       doc.moveTo(50, position + 15)
          .lineTo(550, position + 15)
          .strokeColor('#cccccc')
@@ -668,13 +681,13 @@ const generateOrderInvoice = async (req, res) => {
       position += 20;
     });
 
-    // Add final black line after items
+    
     doc.moveTo(50, position + 10)
        .lineTo(550, position + 10)
        .strokeColor('#000000')
        .stroke();
 
-    // Add summary section
+    
     const summaryPosition = position + 30;
     doc.font('Helvetica-Bold')
        .fontSize(10)
@@ -708,12 +721,12 @@ const generateOrderInvoice = async (req, res) => {
        .text('Thank you for your business!', 50, 700, { align: 'center' })
        .text('For any queries, please contact our customer support.', 50, 715, { align: 'center' });
 
-    // Add final horizontal line
+    
     doc.moveTo(50, 690)
        .lineTo(550, 690)
        .stroke();
 
-    // Finalize the PDF
+    
     doc.end();
 
   } catch (error) {
@@ -721,8 +734,6 @@ const generateOrderInvoice = async (req, res) => {
     res.status(500).send('Error generating invoice');
   }
 };
-
-
 
 
 
@@ -734,5 +745,6 @@ module.exports = {
   verifyPayment,
   requestReturn,
   renderThankYouPage,
-  generateOrderInvoice
+  generateOrderInvoice,
+  
 }

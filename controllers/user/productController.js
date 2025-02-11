@@ -37,7 +37,7 @@ const productDetails = async (req,res)=>{
     
   } catch (error) {
     console.log("error in product delails page render",error)
-    res.redirect('/pageNorFound')
+    res.redirect('/pageNotFound')
   }
 }
 

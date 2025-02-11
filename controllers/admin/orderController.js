@@ -341,11 +341,13 @@ const getSalesReport = async (req, res) => {
   }
 };
 
+
+
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
 
-    const order = await Order.findOne({orderId:orderId});
+    const order = await Order.findOne({ orderId: orderId });
     if (!order) {
       return res.status(404).json({
         status: false,
@@ -362,6 +364,10 @@ const cancelOrder = async (req, res) => {
 
     let refundAmount = 0;
 
+    const totalProductPrice = order.orderItems.reduce((sum, item) => {
+      return sum + item.price * item.quantity;
+    }, 0);
+
     for (const item of order.orderItems) {
       const product = await Product.findById(item.product);
       if (product) {
@@ -369,11 +375,15 @@ const cancelOrder = async (req, res) => {
         await product.save();
       }
 
+      const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (item.price * item.quantity));
+      const productRefundAmount = (item.price * item.quantity) - discountPerProduct;
+
       item.status = 'cancelled';
       item.cancellationReason = 'Cancelled by admin';
       item.cancelledAt = new Date();
+      item.refundAmount = productRefundAmount;
 
-      refundAmount += item.price * item.quantity;
+      refundAmount += productRefundAmount;
     }
 
     order.status = 'cancelled';
@@ -381,7 +391,20 @@ const cancelOrder = async (req, res) => {
     order.finalAmount = 0;
     await order.save();
 
-    
+    // Ensure admin wallet balance does not go below zero
+    let adminWallet = await AdminWallet.findOne();
+    if (!adminWallet) {
+      adminWallet = new AdminWallet();
+    }
+
+    if (adminWallet.balance < refundAmount) {
+      return res.status(400).json({
+        status: false,
+        message: "Admin wallet balance is insufficient to process the refund"
+      });
+    }
+
+    // Process the refund
     const wallet = await getOrCreateWallet(order.userId);
     await addWalletTransaction(
       order.userId,
@@ -390,12 +413,6 @@ const cancelOrder = async (req, res) => {
       `Refund for cancelled order #${order._id}`,
       order._id
     );
-
-    
-    let adminWallet = await AdminWallet.findOne();
-    if (!adminWallet) {
-      adminWallet = new AdminWallet();
-    }
 
     const adminTransaction = {
       user: order.userId,
@@ -422,7 +439,6 @@ const cancelOrder = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -495,6 +511,7 @@ const getOrderDetails = async (req, res) => {
 
 
 
+
 const updateReturnStatus = async (req, res) => {
   try {
     const { orderId, productId, status } = req.body;
@@ -527,21 +544,24 @@ const updateReturnStatus = async (req, res) => {
     order.orderItems[itemIndex].status = status;
 
     if (status === 'returned') {
-      const refundAmount = order.orderItems[itemIndex].price * order.orderItems[itemIndex].quantity;
+      const totalProductPrice = order.orderItems.reduce((sum, item) => {
+        return sum + item.price * item.quantity;
+      }, 0);
+
+      const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (order.orderItems[itemIndex].price * order.orderItems[itemIndex].quantity));
+      const refundAmount = (order.orderItems[itemIndex].price * order.orderItems[itemIndex].quantity) - discountPerProduct;
+
       order.orderItems[itemIndex].refundStatus = 'completed';
       order.orderItems[itemIndex].refundAmount = refundAmount;
 
-      
       order.finalAmount -= refundAmount;
 
-      
       const product = await Product.findById(order.orderItems[itemIndex].product);
       if (product) {
         product.quantity += order.orderItems[itemIndex].quantity;
         await product.save();
       }
 
-      
       const wallet = await getOrCreateWallet(order.userId);
       await addWalletTransaction(
         order.userId,
@@ -551,10 +571,14 @@ const updateReturnStatus = async (req, res) => {
         order._id
       );
 
-      
       let adminWallet = await AdminWallet.findOne();
       if (!adminWallet) {
         adminWallet = new AdminWallet();
+      }
+
+      if (adminWallet.balance < refundAmount) {
+        console.error("Admin wallet balance is insufficient to process the refund for order #", order._id);
+        return res.json({ status: false, message: "Admin wallet balance is insufficient to process the refund" });
       }
 
       const adminTransaction = {

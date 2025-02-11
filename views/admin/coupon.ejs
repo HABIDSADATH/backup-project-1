@@ -97,6 +97,32 @@
     background-color: #c82333;
     border-color: #bd2130;
   }
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
 </style>
 
 <div class="content">
@@ -241,6 +267,23 @@
           </table>
         </div>
       </div>
+    </div>
+    <div class="pagination-container">
+      <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+      <% } %>
+      
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <span class="current-page"><%= i %></span>
+        <% } else { %>
+          <a href="?page=<%= i %>"><%= i %></a>
+        <% } %>
+      <% } %>
+      
+      <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+      <% } %>
     </div>
   </div>
 </div>

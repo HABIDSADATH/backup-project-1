@@ -176,7 +176,6 @@ const postNewPassword = async (req,res)=>{
 }
 
 
-
 const userProfile = async (req, res) => {
   try {
     const user = req.session.user;
@@ -187,7 +186,6 @@ const userProfile = async (req, res) => {
       .populate('transactions.orderId')
       .sort({ 'transactions.createdAt': -1 });
 
-    
     if (walletData && walletData.transactions) {
       walletData.transactions.sort((a, b) => b.createdAt - a.createdAt);
     }
@@ -204,16 +202,38 @@ const userProfile = async (req, res) => {
         }
       },
       { $unwind: '$productDetails' },
-      { $sort: { 'createdOn': -1 } }
+      { $sort: { 'createdOn': -1 } },
+      {
+        $project: {
+          orderId: 1,
+          invoiceDate: 1,
+          status: 1,
+          finalAmount: 1,
+          productDetails: 1,
+          paymentMethod: 1,
+          isPaid: 1,
+          _id: 1
+        }
+      }
     ]);
 
     
+    const referredUsers = await User.find({ _id: { $in: userData.redeemedUsers } });
+
+    let totalReferralEarnings = 0;
+    if (walletData && walletData.transactions) {
+      totalReferralEarnings = walletData.transactions
+        .filter(transaction => transaction.description.includes('Referral bonus'))
+        .reduce((total, transaction) => total + transaction.amount, 0);
+    }
 
     res.render('profile', {
       user: userData,
       userAddress: addressData,
       orderData: ordersData,
-      wallet: walletData || { balance: 0, transactions: [] }
+      wallet: walletData || { balance: 0, transactions: [] },
+      referredUsers: referredUsers || [],
+      totalReferralEarnings
     });
 
   } catch (error) {

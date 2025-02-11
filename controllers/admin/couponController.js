@@ -6,15 +6,31 @@
 const Coupon = require('../../models/couponSchema')
 const mongoose = require('mongoose')
 
-const loadCoupon = async (req,res) => {
+const loadCoupon = async (req, res) => {
   try {
-    const coupons = await Coupon.find();
-    return res.render('coupon',{coupons});
+    const page = parseInt(req.query.page) || 1;
+    const limit = 4; 
+
     
+    const count = await Coupon.countDocuments();
+
+    
+    const coupons = await Coupon.find()
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return res.render('coupon', {
+      coupons,
+      currentPage: page,
+      totalPages: Math.ceil(count / limit)
+    });
+
   } catch (error) {
-    return res.redirect('/pageerror')
+    console.error('Error loading coupons:', error);
+    return res.redirect('/pageerror');
   }
-}
+};
+
 
 const createCoupon = async (req, res) => {
   try {

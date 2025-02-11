@@ -69,6 +69,32 @@
     color: white;
     transition: all 0.3s;
   }
+  .pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pagination-container a {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: white;
+    color: var(--dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .pagination-container a:hover {
+    background-color: var(--primary);
+    color: white;
+  }
+  .current-page {
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: var(--primary);
+    color: white;
+  }
 </style>
 
 <div class="content">
@@ -127,13 +153,21 @@
                   onclick="toggleCustomDate()">Custom Date</button>
         </div>
       </div>
-      <div class="col-12 custom-date-inputs" style="display: <%= reportType === 'custom' ? 'block' : 'none' %>">
+      <div class="col-12 custom-date-inputs" style="display: '<%= reportType === 'custom' ? 'block' : 'none' %>'">
         <div class="row g-3">
           <div class="col-md-5">
-            <input type="date" class="form-control" id="startDate" value="<%= startDate?.toISOString().split('T')[0] %>">
+            <input type="date" 
+                class="form-control" 
+                id="startDate" 
+                max="<%= new Date().toISOString().split('T')[0] %>"
+                value="<%= startDate?.toISOString().split('T')[0] %>">
           </div>
           <div class="col-md-5">
-            <input type="date" class="form-control" id="endDate" value="<%= endDate?.toISOString().split('T')[0] %>">
+            <input type="date" 
+                class="form-control" 
+                id="endDate" 
+                max="<%= new Date().toISOString().split('T')[0] %>"
+                value="<%= endDate?.toISOString().split('T')[0] %>">
           </div>
           <div class="col-md-2">
             <button onclick="applyCustomDate()" class="btn btn-primary w-100">Apply</button>
@@ -187,6 +221,23 @@
       </table>
     </div>
   </div>
+  <div class="pagination-container">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>"><i class="fas fa-chevron-left"></i></a>
+    <% } %>
+    
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === currentPage) { %>
+        <span class="current-page"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %>"><%= i %></a>
+      <% } %>
+    <% } %>
+    
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>"><i class="fas fa-chevron-right"></i></a>
+    <% } %>
+  </div>
 </div>
 
 <script>
@@ -224,6 +275,34 @@ async function exportReport(type) {
     console.error('Export error:', error);
     Swal.fire('Error', 'Failed to export report', 'error');
   }
+}
+
+function applyCustomDate() {
+  const startDate = new Date(document.getElementById('startDate').value);
+  const endDate = new Date(document.getElementById('endDate').value);
+  const today = new Date();
+  
+  
+  if (!startDate || !endDate) {
+    Swal.fire('Error', 'Please select both start and end dates', 'error');
+    return;
+  }
+
+  
+  if (endDate < startDate) {
+    Swal.fire('Error', 'End date cannot be before start date', 'error');
+    return;
+  }
+
+  
+  if (startDate > today || endDate > today) {
+    Swal.fire('Error', 'Dates cannot be in the future', 'error');
+    return;
+  }
+
+
+  
+  window.location.href = `/admin/sales-report?reportType=custom&startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`;
 }
 </script>
 
