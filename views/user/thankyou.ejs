@@ -111,9 +111,21 @@
   <div class="thankyou-container">
     <div class="container">
       <div class="thankyou-card">
-        <i class="fas fa-check-circle" style="font-size: 50px; color: #28a745;"></i>
-        <h2>Thank You for Your Order!</h2>
-        <p>Your order has been successfully placed.</p>
+        <% if (order.paymentMethod === 'online' && !order.isPaid) { %>
+          <!-- Payment Failed Message -->
+          <i class="fas fa-times-circle" style="font-size: 50px; color: #dc3545;"></i>
+          <h2>Payment Failed!</h2>
+          <p>We couldn't process your payment. Please try again from profile.</p>
+      
+          <!-- Retry Payment Button -->
+          <a href="/userProfile" class="continue-shopping" style="background-color: #007bff; margin-bottom: 18px; margin-top: 0">view order</a>
+      <% } else { %>
+          <!-- Payment Success Message -->
+          <i class="fas fa-check-circle" style="font-size: 50px; color: #28a745;"></i>
+          <h2>Thank You for Your Order!</h2>
+          <p>Your order has been successfully placed.</p>
+      <% } %>
+      
         <h4>Order ID: <span class="order-id"><%= order.orderId %></span></h4>
       </div>
 
@@ -156,22 +168,26 @@
       <div class="order-summary">
         <h6>Order Summary</h6>
         <div class="price-row">
-          <span>Total Price</span>
-          <span>₹<%= order.totalPrice %></span>
+            <span>Total Price</span>
+            <span>₹<%= order.totalPrice %></span>
         </div>
         <% if(order.discount > 0) { %>
         <div class="price-row">
-          <span>Discount</span>
-          <span>-₹<%= order.discount %></span>
+            <span>Discount</span>
+            <span>-₹<%= order.discount %></span>
         </div>
         <% } %>
         <div class="price-row">
-          <span>Delivery Charges</span>
-          <span>₹49</span>
+            <span>GST (18%):</span>
+            <span>₹<%= gstAmount %></span> <!-- Display GST amount here -->
         </div>
         <div class="price-row">
-          <strong>Total Amount</strong>
-          <strong>₹<%= order.finalAmount %></strong>
+            <span>Delivery Charges</span>
+            <span>₹49</span>
+        </div>
+        <div class="price-row">
+            <strong>Total Amount</strong>
+            <strong>₹<%= order.finalAmount %></strong>
         </div>
       </div>
 

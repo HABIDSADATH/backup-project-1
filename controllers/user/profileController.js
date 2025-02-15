@@ -80,7 +80,7 @@ const getForgotPassPage = async (req,res)=>{
 
 const forgotEmailValid = async (req,res)=>{
   try {
-    const userData = User.findById(req.session.user)
+    
     const {email} = req.body
     console.log('des',email)
     const findUser = await User.findOne({email:email})
@@ -97,8 +97,7 @@ const forgotEmailValid = async (req,res)=>{
       }
     }else{
       res.render("forgot-password",{
-        message:"User with this email does not exist",
-        user:userData
+        message:"User with this email does not exist"
       })
     }
     
@@ -114,7 +113,7 @@ const verifyForgotPassOtp = async (req,res)=>{
     const enteredOtp = req.body.otp
     console.log('entered otp',enteredOtp)
     if(enteredOtp === req.session.userOtp){
-      res.json({success:true,redirectUrl:'/reset-password'})
+      return res.redirect('/reset-password')
     }else{
       res.json({success:false,message:'OTP not matching'})
     }
@@ -375,6 +374,7 @@ const changePasswordValid = async (req,res)=>{
 }
 
 const verifychangePassOtp = async (req, res) => {
+  console.log('hello verify change pass')
   try {
     const enteredOtp = req.body.otp;
     console.log("Entered OTP: ", enteredOtp);

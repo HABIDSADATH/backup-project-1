@@ -23,6 +23,11 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      gstRate: {
+        type: Number,
+        required: true,
+        default: 0.18,
+      },
       status: {
         type: String,
         enum: [
@@ -77,6 +82,9 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   invoiceDate: {
+    type: Date,
+  },
+  deliveryDate: {
     type: Date,
   },
   status: {

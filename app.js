@@ -52,17 +52,27 @@ app.use('/admin', adminRouter);
 
 
 
+
+app.use((req, res) => {
+  res.status(404).render('page-404'); 
+});
+
+
 app.use((err, req, res, next) => {
-  console.error(err.stack); 
+  console.error('Error:', err.stack);
+  console.log('Requested URL:', req.originalUrl);
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  if (req.originalUrl.startsWith('/admin')) {
+    console.log('Admin Error Page');
+    res.status(500).render('error', { redirectUrl: '/admin/' });
+  } else {
+    console.log('User Error Page');
+    res.status(500).render('error', { redirectUrl: '/' });
+  }
+});
 
-  res.status(statusCode).json({
-    success: false,
-    message: message,
-  });
-})
+
+
 
 
 app.listen(process.env.PORT, () => {

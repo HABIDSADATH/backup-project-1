@@ -52,14 +52,14 @@ const loadDashboard = async (req, res) => {
     try {
       
       const totalOrders = await Order.countDocuments();
-      // const totalRevenue = await Order.aggregate([
-      //   { $match: { status: { $nin: ['cancelled', 'returned'] } } },
-      //   { $group: { _id: null, total: { $sum: '$finalAmount' } } }
-      // ]);
+      const totalRevenue = await Order.aggregate([
+        { $match: { status: { $nin: ['cancelled', 'returned'] } } },
+        { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      ]);
 
-      const adminWallet = await AdminWallet.findOne();
-      console.log('admin wallet is ',adminWallet.balance)
-      const totalRevenue = adminWallet.balance ? adminWallet.balance : 0;
+      // const adminWallet = await AdminWallet.findOne();
+      // console.log('admin wallet is ',adminWallet.balance)
+      // const totalRevenue = adminWallet.balance ? adminWallet.balance : 0;
 
       
 
@@ -227,13 +227,8 @@ const getDashboardData = async (req, res) => {
 const logout = async (req,res)=>{
   try {
 
-    req.session.destroy(err =>{
-      if(err){
-        console.log("Error destroying session",err)
-        return res.redirect('/pageerror')
-      }
-      res.redirect('/admin/login')
-    })
+    delete req.session.admin 
+    return res.redirect ('/admin/login')
     
   } catch (error) {
     console.log("unexpected error during logout",error)

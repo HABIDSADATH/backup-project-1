@@ -179,7 +179,7 @@ const placeOrder = async (req, res) => {
       message: 'An error occurred while placing the order'
     });
   }
-};
+}
 
 
 
@@ -241,6 +241,7 @@ const getOrderDetails = async (req, res) => {
 
 
 
+
 const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -280,14 +281,14 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Adjust the product quantity in stock
+    // Restore product stock
     const product = await Product.findById(productToCancel.product);
     if (product) {
       product.quantity += productToCancel.quantity;
       await product.save();
     }
 
-    // Calculate the prorated discount for the product
+    // Calculate refund amount
     const totalProductPrice = order.orderItems.reduce((sum, item) => {
       return sum + item.price * item.quantity;
     }, 0);
@@ -295,13 +296,19 @@ const cancelOrder = async (req, res) => {
     const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (productToCancel.price * productToCancel.quantity));
     const productRefundAmount = (productToCancel.price * productToCancel.quantity) - discountPerProduct;
 
-    let refundAmount = 0;
-    if (order.paymentMethod !== "cod" && order.isPaid) {
-      refundAmount = productRefundAmount;
+    // Calculate GST for the cancelled product
+    const gstPerProduct = Math.round(productToCancel.price * productToCancel.quantity * 0.18);
+
+    let refundAmount = productRefundAmount + gstPerProduct;
+
+    // Refund shipping charge if this is the last product in the order
+    const remainingProducts = order.orderItems.filter(item => item.status !== "cancelled");
+    if (remainingProducts.length === 1 && remainingProducts[0].product.toString() === productId) {
+      refundAmount += order.shippingCost || 0; // Add shipping charge to refund
     }
 
-    // Process the refund if applicable
-    if (refundAmount > 0) {
+    // Process refund to user wallet
+    if (order.paymentMethod !== "cod" && order.isPaid && refundAmount > 0) {
       try {
         const userId = order.userId;
         const wallet = await getOrCreateWallet(userId);
@@ -347,24 +354,30 @@ const cancelOrder = async (req, res) => {
       }
     }
 
-    
+    // Update order and product status
     productToCancel.status = "cancelled";
     productToCancel.cancellationReason = cancellationReason;
     productToCancel.cancelledAt = new Date();
     productToCancel.refundStatus = refundAmount > 0 ? "pending" : "completed";
     productToCancel.refundAmount = refundAmount;
 
-    
+    // Update order totals
     const cancelledProductTotal = productToCancel.price * productToCancel.quantity;
     order.totalPrice -= cancelledProductTotal;
     order.finalAmount -= refundAmount;
 
+    // Deduct GST for the cancelled product
+    order.gstAmount -= gstPerProduct;
+
+    // Check if all products are cancelled
     const allProductsCancelled = order.orderItems.every(
       (item) => item.status === "cancelled"
     );
 
-    order.status = allProductsCancelled ? "cancelled" : order.status;
-    order.finalAmount = allProductsCancelled ? 0 : order.finalAmount;
+    if (allProductsCancelled) {
+      order.status = "cancelled";
+      order.finalAmount = 0;
+    }
 
     await order.save();
 
@@ -383,6 +396,8 @@ const cancelOrder = async (req, res) => {
     });
   }
 };
+
+
 
 
 
@@ -434,6 +449,13 @@ const verifyPayment = async (req, res) => {
           order.status = 'pending'; 
           await order.save();
 
+          for (const item of order.orderItems) {
+            await Product.findByIdAndUpdate(
+              item.product,
+              { $inc: { quantity: -item.quantity } }
+            );
+          }
+
           
           let adminWallet = await AdminWallet.findOne();
           if (!adminWallet) {
@@ -464,6 +486,8 @@ const verifyPayment = async (req, res) => {
   }
 }
 
+
+
 const requestReturn = async (req, res) => {
   try {
     const orderId = req.params.orderId; 
@@ -484,7 +508,11 @@ const requestReturn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Return can only be requested for delivered orders.' });
     }
 
-    
+    const currentDate = new Date();
+    if (currentDate > order.returnExpiryDate) {
+      return res.status(400).json({ success: false, message: 'Return period has expired.' });
+    }
+
     const itemToReturn = order.orderItems.find(item => item.product.toString() === productId.toString());
 
     if (!itemToReturn) {
@@ -507,6 +535,8 @@ const requestReturn = async (req, res) => {
   }
 };
 
+
+
 const renderThankYouPage = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -515,7 +545,7 @@ const renderThankYouPage = async (req, res) => {
     const userData = await User.findById(user);
     if (!userData) {
       return res.status(404).render('page-404', {
-        message: 'User not found'
+        message: 'User  not found'
       });
     }
 
@@ -539,10 +569,14 @@ const renderThankYouPage = async (req, res) => {
       });
     }
 
+    
+    const gstAmount = Math.round(order.totalPrice - (order.totalPrice / 1.18)); 
+
     res.render('thankyou', {
       order: order,
       address: addressData.address[0], 
       user: userData,
+      gstAmount: gstAmount, 
       title: 'Thank You for Your Order'
     });
 
@@ -559,7 +593,6 @@ const generateOrderInvoice = async (req, res) => {
   try {
     const orderId = req.params.orderId;
 
-    
     const order = await Order.findOne({ orderId: orderId }).populate({
       path: 'orderItems.product',
       select: 'productName productImages price',
@@ -572,7 +605,9 @@ const generateOrderInvoice = async (req, res) => {
       return res.status(404).send('Order, Address, or User not found');
     }
 
-    
+    // Calculate GST
+    const gstAmount = Math.round(order.totalPrice - (order.totalPrice / 1.18)); // Assuming totalPrice includes GST
+
     const doc = new PDFDocument({ 
       size: 'A4',
       margin: 50 
@@ -581,12 +616,10 @@ const generateOrderInvoice = async (req, res) => {
     let filename = `invoice_${orderId}.pdf`;
     filename = encodeURIComponent(filename);
 
-    
     res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-type', 'application/pdf');
     doc.pipe(res);
 
-    
     const tableTop = 350;
     const itemCodeX = 50;
     const statusX = 200;
@@ -594,12 +627,10 @@ const generateOrderInvoice = async (req, res) => {
     const priceX = 380;
     const amountX = 480;
 
-    
     const logoPath = path.join(__dirname, '../../public/images/logo.png');
     doc.image(logoPath, 50, 45, { width: 150 })
        .font('Helvetica-Bold')
        .fontSize(20)
-      
        .fontSize(10)
        .font('Helvetica')
        .text('1234 Main Street', 200, 65, { align: 'right' })
@@ -607,17 +638,14 @@ const generateOrderInvoice = async (req, res) => {
        .text('Phone: +91 7736675660', 200, 95, { align: 'right' })
        .text('Email: famms@gmail.com', 200, 110, { align: 'right' });
 
-   
     doc.moveTo(50, 140)
        .lineTo(550, 140)
        .stroke();
 
-    
     doc.fontSize(20)
        .font('Helvetica-Bold')
        .text('INVOICE', 50, 170);
 
-    
     doc.fontSize(10)
        .font('Helvetica')
        .text('Invoice Date:', 50, 200)
@@ -629,7 +657,6 @@ const generateOrderInvoice = async (req, res) => {
        .text('Payment Status:', 50, 245)
        .text(order.isPaid ? 'PAID' : 'PENDING', 150, 245);
 
-    
     doc.fontSize(12)
        .font('Helvetica-Bold')
        .text('Bill To:', 50, 275)
@@ -639,7 +666,6 @@ const generateOrderInvoice = async (req, res) => {
        .text(`${addressData.address[0].city}, ${addressData.address[0].landMark}`, 50, 305)
        .text(`${addressData.address[0].state} - ${addressData.address[0].pincode}`, 50, 320);
 
-    
     doc.fillColor('#444444')
        .rect(50, tableTop - 20, 500, 20)
        .fill()
@@ -651,16 +677,11 @@ const generateOrderInvoice = async (req, res) => {
        .text('Price', priceX, tableTop - 15)
        .text('Amount', amountX, tableTop - 15);
 
-    
     doc.fillColor('#000000');
 
-    
     let position = tableTop + 10;
     order.orderItems.forEach(item => {
-      
       const formattedStatus = item.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      
-      
       const itemPrice = parseInt(item.price);
       const totalPrice = parseInt(item.price) * parseInt(item.quantity);
 
@@ -672,7 +693,6 @@ const generateOrderInvoice = async (req, res) => {
          .text(`₹ ${itemPrice}`, priceX, position)
          .text(`₹ ${totalPrice}`, amountX, position);
       
-      
       doc.moveTo(50, position + 15)
          .lineTo(550, position + 15)
          .strokeColor('#cccccc')
@@ -681,52 +701,49 @@ const generateOrderInvoice = async (req, res) => {
       position += 20;
     });
 
-    
     doc.moveTo(50, position + 10)
        .lineTo(550, position + 10)
        .strokeColor('#000000')
        .stroke();
 
-    
     const summaryPosition = position + 30;
     doc.font('Helvetica-Bold')
        .fontSize(10)
        .text('Summary', 350, summaryPosition);
 
-    
     const deliveryCharges = 49;
     const subtotal = parseInt(order.totalPrice);
     const discount = parseInt(order.discount);
     const finalAmount = parseInt(order.finalAmount);
 
-    
     doc.font('Helvetica')
        .text('Subtotal:', 350, summaryPosition + 20)
        .text(`₹ ${subtotal}`, amountX, summaryPosition + 20);
 
+    // Add GST to the summary
+    doc.text('GST (18%):', 350, summaryPosition + 35)
+       .text(`₹ ${gstAmount}`, amountX, summaryPosition + 35);
+
     if (discount > 0) {
-      doc.text('Discount:', 350, summaryPosition + 35)
-         .text(`- ₹ ${discount}`, amountX, summaryPosition + 35)
+      doc.text('Discount:', 350, summaryPosition + 50)
+         .text(`- ₹ ${discount}`, amountX, summaryPosition + 50);
     }
 
-    doc.text('Delivery Charges:', 350, summaryPosition + (discount > 0 ? 50 : 35))
-       .text(`₹ ${deliveryCharges}`, amountX, summaryPosition + (discount > 0 ? 50 : 35))
+    doc.text('Delivery Charges:', 350, summaryPosition + (discount > 0 ? 65 : 50))
+       .text(`₹ ${deliveryCharges}`, amountX, summaryPosition + (discount > 0 ? 65 : 50))
        .font('Helvetica-Bold')
-       .text('Final Amount:', 350, summaryPosition + (discount > 0 ? 75 : 60))
-       .text(`₹ ${finalAmount}`, amountX, summaryPosition + (discount > 0 ? 75 : 60));
+       .text('Final Amount:', 350, summaryPosition + (discount > 0 ? 90 : 75))
+       .text(`₹ ${finalAmount}`, amountX, summaryPosition + (discount > 0 ? 90 : 75));
 
-    
     doc.fontSize(10)
        .font('Helvetica')
        .text('Thank you for your business!', 50, 700, { align: 'center' })
        .text('For any queries, please contact our customer support.', 50, 715, { align: 'center' });
 
-    
     doc.moveTo(50, 690)
        .lineTo(550, 690)
        .stroke();
 
-    
     doc.end();
 
   } catch (error) {

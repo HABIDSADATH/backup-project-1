@@ -217,22 +217,32 @@
           <% }) %>
         </tbody>
         <tfoot>
-          <%if(order.totalPrice!=0){%>
+          <% if (order.totalPrice != 0) { %>
           <tr>
             <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
             <td>₹<%= order.totalPrice?.toLocaleString() || 0 %></td>
           </tr>
           <tr>
+            <td colspan="5" class="text-end"><strong>GST (18%):</strong></td>
+            <td>₹<%= order.gstAmount?.toLocaleString() || 0 %></td> <!-- Display GST amount here -->
+          </tr>
+          <% if (order.discount > 0) { %>
+          <tr>
             <td colspan="5" class="text-end"><strong>Discount:</strong></td>
             <td>₹<%= order.discount?.toLocaleString() || 0 %></td>
           </tr>
+          <% } %>
           <tr>
             <td colspan="5" class="text-end"><strong>Final Amount:</strong></td>
             <td>₹<%= order.finalAmount?.toLocaleString() || 0 %></td>
           </tr>
-          <%}else{%>
+          <% } else { %>
             <tr>
               <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
+              <td>₹ 0 </td>
+            </tr>
+            <tr>
+              <td colspan="5" class="text-end"><strong>GST (18%):</strong></td>
               <td>₹ 0 </td>
             </tr>
             <tr>
@@ -243,7 +253,7 @@
               <td colspan="5" class="text-end"><strong>Final Amount:</strong></td>
               <td>₹ 0 </td>
             </tr>
-            <%}%>
+          <% } %>
         </tfoot>
       </table>
     </div>

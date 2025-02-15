@@ -165,6 +165,251 @@
     font-size: 2rem;
   }
 }
+
+/*remove from top*/
+
+.profile-banner {
+  border-radius: 15px 15px 0 0;
+}
+
+.profile-picture-wrapper {
+  position: absolute;
+  left: 50%;
+  bottom: -50px;
+  transform: translateX(-50%);
+}
+
+.profile-picture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-name {
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding-top: 7px;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #666;
+}
+
+.detail-item i {
+  color: #f7444e;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-edit-profile, .btn-change-email {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-edit-profile {
+  background-color: #f7444e;
+  color: white;
+}
+
+.btn-change-email {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #dee2e6;
+}
+
+.btn-edit-profile:hover {
+  background-color: #e43a43;
+  color: white;
+}
+
+.btn-change-email:hover {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+@media (max-width: 576px) {
+  .profile-actions {
+    flex-direction: column;
+  }
+  
+  .btn-edit-profile, .btn-change-email {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.address-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.address-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.address-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.address-type {
+  background: #f7444e;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.address-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.action-btn.edit {
+  background: #e8f4ff;
+  color: #0084ff;
+}
+
+.action-btn.delete {
+  background: #fff1f1;
+  color: #f7444e;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.address-body {
+  padding: 20px;
+}
+
+.recipient-info {
+  margin-bottom: 15px;
+}
+
+.recipient-info .name {
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 600;
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.address-details {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.address-details .location {
+  margin-bottom: 5px;
+}
+
+.address-details .region {
+  color: #888;
+}
+
+/* Add New Address Card Styles */
+.new-address {
+  border: 2px dashed #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.add-address-content {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.add-icon {
+  font-size: 2.5rem;
+  color: #f7444e;
+  margin-bottom: 15px;
+}
+
+.btn-add-address {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 8px 24px;
+  background: #f7444e;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-add-address:hover {
+  background: #e43a43;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .address-card {
+    margin-bottom: 20px;
+  }
+  
+  .contact {
+    flex-direction: row;
+    gap: 15px;
+  }
+}
 </style>
 
 <main class="main">
@@ -239,71 +484,100 @@
                 <!-- Dashboard tab -->
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                   <div class="card">
-                      <!-- Your existing dashboard content -->
-                      <div class="tab-pane fade show active" id="dashboard">
-                        <div class="card">
-                          <div class="card-header">
-                            <h5 class="mb-0">profile</h5>
-                            <button onclick="openEditModal()" class="btn btn-success btn-sm position-absolute" style="top: 1rem; right: 1rem;">
-                              <i class="fas fa-edit me-2"></i>Edit Profile
-                            </button>
-                          </div>
-                          <div class="card-body text-center">
-                            <div class="profile-image" >
-                              <!-- <img src="/api/placeholder/120/120" alt="Profile" class="img-fluid rounded-circle"> -->
-                            </div>
-                            <h4 class="mb-3"><%=user.name%></h4>
-                            <p class="mb-2"><strong>Phone:</strong> <%=user.phone%></p>
-                            <p class="mb-4"><strong>Email:</strong> <%=user.email%></p>
-                            <div class="d-flex justify-content-center gap-3" style="gap: 10px;">
-                              <a href="/change-email" class="btn btn-success">Change Email</a>
-                              <a href="/change-password" class="btn btn-success">Change Password</a>
-                            </div>
+                    <div class="card-body p-0">
+                      <!-- Profile Header Banner -->
+                      <div class="position-relative">
+                        <div class="profile-banner" style="height: 140px; background: linear-gradient(to right, #f7444e, #e43a43);"></div>
+                        <div class="profile-picture-wrapper">
+                          <div class="profile-picture">
+                            <i class="fas fa-user fa-2x text-gray-400"></i>
                           </div>
                         </div>
                       </div>
+                
+                      <!-- Profile Info -->
+                      <div class="profile-info text-center pt-5  x-4" style="padding-bottom:5.5rem;">
+                        <h3 class="profile-name mb-3"><%=user.name%></h3>
+                        
+                        <div class="profile-details">
+                          <div class="detail-item">
+                            <i class="fas fa-envelope text-primary"></i>
+                            <span><%=user.email%></span>
+                          </div>
+                          <div class="detail-item">
+                            <i class="fas fa-phone text-primary"></i>
+                            <span><%=user.phone%></span>
+                          </div>
+                        </div>
+                
+                        <div class="profile-actions mt-4">
+                          <button onclick="openEditModal()" class="btn-edit-profile">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                          </button>
+                          <a href="/change-email" class="btn-change-email">
+                            <i class="fas fa-envelope me-2"></i>Change Email
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-              </div>
+                </div>
 
                 <!-- Your address content -->
                 <div class="tab-pane fade" id="address">
-                  <div class="row">
+                  <div class="row g-4">
+                    <!-- Existing Addresses -->
                     <% if(userAddress) { %>
                       <% userAddress.address.forEach((address) => { %>
                         <div class="col-lg-6">
-                          <div class="card mb-3">
-                            <div class="card-header">
-                              <h5 class="mb-0"><%= address.addressType %></h5>
+                          <div class="address-card">
+                            <div class="address-header">
+                              <span class="address-type"><%= address.addressType %></span>
+                              <div class="address-actions">
+                                <a href="/editAddress?id=<%= address._id %>" class="action-btn edit">
+                                  <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/deleteAddress?id=<%= address._id %>" class="action-btn delete" 
+                                   onclick="return confirm('Are you sure you want to delete this address?')">
+                                  <i class="fas fa-trash"></i>
+                                </a>
+                              </div>
                             </div>
-                            <div class="card-body">
-                              <address>
-                                <%= address.name %><br>
-                                <%= address.city %> <br>
-                                <%= address.landMark %><br>
-                                <%= address.state %> <br>
-                              </address>
-                              <p><%= address.pincode %></p>
-                              <p><%= address.phone %></p>
-                              <p><%= address.altPhone %></p>
-                              <div class="d-flex justify-content-between mt-3">
-                                <a href="/editAddress?id=<%= address._id %>" class="btn btn-success btn-sm">Edit</a>
-                                <a href="/deleteAddress?id=<%= address._id %>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                            <div class="address-body">
+                              <div class="recipient-info">
+                                <h5 class="name"><%= address.name %></h5>
+                                <div class="contact">
+                                  <span><i class="fas fa-phone me-2"></i><%= address.phone %></span>
+                                  <% if(address.altPhone) { %>
+                                    <span><i class="fas fa-phone-alt me-2"></i><%= address.altPhone %></span>
+                                  <% } %>
+                                </div>
+                              </div>
+                              <div class="address-details">
+                                <p class="location">
+                                  <i class="fas fa-map-marker-alt me-2"></i>
+                                  <%= address.landMark %>, <%= address.city %>
+                                </p>
+                                <p class="region"><%= address.state %> - <%= address.pincode %></p>
                               </div>
                             </div>
                           </div>
                         </div>
                       <% }) %>
-                    <% } else { %>
-                      <p>No address added yet</p>
                     <% } %>
+                
+                    <!-- Add New Address Card -->
                     <div class="col-lg-6">
-                      <div class="card mb-3">
-                        <div class="card-header">
-                          <h5 class="mb-0">add new address</h5>
-                        </div>
-                        <div class="card-body">
-                          <p>Add a different shipping address</p>
-                          <a href="/addAddress" class="btn btn-success">Add New Address</a>
+                      <div class="address-card new-address">
+                        <div class="add-address-content">
+                          <div class="add-icon">
+                            <i class="fas fa-plus-circle"></i>
+                          </div>
+                          <h5>Add New Address</h5>
+                          <p>Add a new delivery address</p>
+                          <a href="/addAddress" class="btn-add-address">
+                            Add Address
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -486,7 +760,7 @@
                                 <td><%= order.status %></td>
                                 <td>₹<%= order.finalAmount %></td>
                                 <td>
-                                  <% if (order.isPaid) { %>
+                                  <% if (order.isPaid || order.status === 'delivered') { %>
                                     <span class="text-success">Paid</span>
                                   <% } else if (order.status === 'cancelled') { %>
                                     <span class="text-danger">Failed</span>

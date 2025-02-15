@@ -12,14 +12,15 @@ const Order = require('../../models/orderSchema')
 
 
 
+
 const viewCheckout = async (req, res) => {
   try {
-    const user = req.session.user
-    const userData = await User.findById(user)
+    const user = req.session.user;
+    const userData = await User.findById(user);
 
-    const cart = await Cart.findOne({ userId: user }).populate('items.productId')
+    const cart = await Cart.findOne({ userId: user }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
-      return res.render('cart', { cartItems: [], user: userData, message: 'Your cart is empty' })
+      return res.render('cart', { cartItems: [], user: userData, message: 'Your cart is empty' });
     }
 
     const cartItems = cart.items.map(item => ({
@@ -27,26 +28,31 @@ const viewCheckout = async (req, res) => {
       productName: item.productId.productName,
       quantity: item.quantity,
       price: item.price,
-      totalPrice: item.totalPrice,
+      totalPrice: item.totalPrice, 
       productImages: item.productId.productImages
     }));
 
-    const subTotal = cartItems.reduce((total, item) => total + item.totalPrice, 0);
+    
+    const totalWithGST = cartItems.reduce((total, item) => total + item.totalPrice, 0);
+
+    
+    const gstAmount = Math.round(totalWithGST * 0.18);
+
     const shippingCost = 49;
-    const totalAmount = subTotal + shippingCost;
+
+    
+    const finalAmount = totalWithGST + gstAmount + shippingCost;
 
     const address = await Address.findOne({ userId: user });
 
-    
     const currentDate = new Date();
     const availableCoupons = await Coupon.find({
       isList: true,
       expireOn: { $gt: currentDate },
-      minimumPrice: { $lte: subTotal },
-      userId: { $nin: [user] } 
+      minimumPrice: { $lte: totalWithGST },
+      userId: { $nin: [user] }
     }).select('name couponCode offerPrice minimumPrice expireOn');
 
-    
     const coupons = availableCoupons.map(coupon => ({
       code: coupon.couponCode,
       description: `${coupon.name} - Save ₹${coupon.offerPrice} on minimum purchase of ₹${coupon.minimumPrice}`,
@@ -58,18 +64,19 @@ const viewCheckout = async (req, res) => {
     res.render('checkout', {
       cartItems,
       addresses: address,
-      subTotal,
+      subTotal: totalWithGST, 
+      gstAmount, 
       shippingCost,
-      totalAmount,
+      finalAmount, 
       user: userData,
-      coupons, 
+      coupons,
     });
 
   } catch (error) {
     console.error('Checkout error:', error);
-    res.redirect('/pageNotFound')
+    res.redirect('/pageNotFound');
   }
-}
+};
 
 const applyCoupon = async (req, res) => { 
   try { 
@@ -97,7 +104,7 @@ const applyCoupon = async (req, res) => {
       }); 
     } 
 
-    // Check if user has used this coupon in any completed order
+    
     const usedInOrder = await Order.findOne({
       userId: user,
       'coupon.code': couponCode,
@@ -142,6 +149,43 @@ const applyCoupon = async (req, res) => {
       message: 'Failed to apply coupon'  
     }); 
   } 
+};
+
+const removeCoupon = async (req, res) => {
+  try {
+      if (!req.session || !req.session.user) {
+          return res.status(401).json({
+              success: false,
+              message: 'Please login to remove coupon'
+          });
+      }
+
+      const user = req.session.user;
+      const cart = await Cart.findOne({ userId: user });
+
+      if (!cart) {
+          return res.status(400).json({
+              success: false,
+              message: 'Cart not found'
+          });
+      }
+
+      
+      cart.appliedCoupon = null;  
+      await cart.save();
+
+      return res.status(200).json({
+          success: true,
+          message: 'Coupon removed successfully'
+      });
+
+  } catch (error) {
+      console.error('Remove coupon error:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'Failed to remove coupon'
+      });
+  }
 };
 
 const addAddress = async (req, res) => {
@@ -191,5 +235,6 @@ const addAddress = async (req, res) => {
 module.exports = {
   viewCheckout,
   applyCoupon,
-  addAddress
+  addAddress,
+  removeCoupon
 }

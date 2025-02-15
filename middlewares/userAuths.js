@@ -10,12 +10,8 @@ const userAuth = async (req, res, next) => {
 
       
       if (userData.isBlocked) {
-        req.session.destroy((err) => {
-          if (err) {
-            return res.status(500).send("Error in destroying session");
-          }
-          return res.redirect('/login'); 
-        });
+        delete req.session.user;
+        return res.redirect("/login")
       } else {
         return next(); 
       }

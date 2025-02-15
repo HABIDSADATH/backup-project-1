@@ -115,7 +115,6 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { orderId, status, productId } = req.body;
 
-    
     const validTransitions = {
       'pending': ['processing', 'cancelled'],
       'processing': ['shipped', 'cancelled'],
@@ -124,13 +123,11 @@ const updateOrderStatus = async (req, res) => {
       'return_requested': ['returned', 'cancelled']
     };
 
-    
     const order = await Order.findOne({ orderId: orderId });
     if (!order) {
       return res.status(404).json({ status: false, message: "Order not found" });
     }
 
-    
     let item = null;
     if (productId) {
       item = order.orderItems.find(i => i.product.toString() === productId);
@@ -138,53 +135,44 @@ const updateOrderStatus = async (req, res) => {
         return res.status(404).json({ status: false, message: "Product not found in the order" });
       }
 
-      
       if (!validTransitions[item.status]?.includes(status)) {
         return res.status(400).json({ status: false, message: "Invalid status transition for the item" });
       }
 
-      
       item.status = status;
 
-      
       if (status === 'cancelled') {
         item.cancelledAt = new Date();
       }
 
-      
       if (status === 'returned') {
         item.refundStatus = 'processing';
         item.refundAmount = item.price * item.quantity; 
 
-        
         const refundAmount = item.refundAmount;
         if (refundAmount > 0) {
           await processRefund(order.userId, refundAmount, order._id);
         }
       }
     } else {
-      
       if (!validTransitions[order.status]?.includes(status)) {
         return res.status(400).json({ status: false, message: "Invalid status transition for the order" });
       }
 
-      
       await Promise.all(order.orderItems.map(async (item) => {
         if (validTransitions[item.status]?.includes(status)) {
           item.status = status;
 
-          
           if (status === 'cancelled') {
             item.cancelledAt = new Date();
           }
 
-          
           if (status === 'returned') {
             item.refundStatus = 'processing';
             item.refundAmount = item.price * item.quantity;
 
-            
             const refundAmount = item.refundAmount;
+            
             if (refundAmount > 0) {
               await processRefund(order.userId, refundAmount, order._id);
             }
@@ -193,7 +181,6 @@ const updateOrderStatus = async (req, res) => {
       }));
     }
 
-    
     const itemStatuses = order.orderItems.map(item => item.status);
     if (itemStatuses.every(status => status === 'cancelled')) {
       order.status = 'cancelled';
@@ -209,12 +196,15 @@ const updateOrderStatus = async (req, res) => {
       order.status = status;
     }
 
-    
     if (status === 'shipped' && !productId) {
       order.invoiceDate = new Date();
     }
 
-    
+    if (status === 'delivered') {
+      order.deliveryDate = new Date();
+      order.returnExpiryDate = new Date(order.deliveryDate.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days after delivery date
+    }
+
     if (status === 'delivered' && order.paymentMethod === 'cod') {
       const totalAmount = order.finalAmount;
       let adminWallet = await AdminWallet.findOne();
@@ -236,7 +226,6 @@ const updateOrderStatus = async (req, res) => {
       await adminWallet.save();
     }
 
-    
     await order.save();
 
     res.json({ status: true, message: "Order status updated successfully" });
@@ -245,6 +234,8 @@ const updateOrderStatus = async (req, res) => {
     res.status(500).json({ status: false, message: "Internal server error" });
   }
 };
+
+
 
 
 const getFilteredOrders = async (req, res) => {
@@ -347,6 +338,7 @@ const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
 
+    // Fetch the order
     const order = await Order.findOne({ orderId: orderId });
     if (!order) {
       return res.status(404).json({
@@ -355,6 +347,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    // Check order status
     if (!['pending', 'processing'].includes(order.status)) {
       return res.status(400).json({
         status: false,
@@ -363,35 +356,45 @@ const cancelOrder = async (req, res) => {
     }
 
     let refundAmount = 0;
+    let totalGSTRefund = 0;
 
     const totalProductPrice = order.orderItems.reduce((sum, item) => {
       return sum + item.price * item.quantity;
     }, 0);
 
     for (const item of order.orderItems) {
+      // Restore stock
       const product = await Product.findById(item.product);
       if (product) {
         product.quantity += item.quantity;
         await product.save();
       }
 
+      // Calculate refund for each product
       const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (item.price * item.quantity));
       const productRefundAmount = (item.price * item.quantity) - discountPerProduct;
 
+      // Calculate GST for each product
+      const gstPerProduct = Math.round(item.price * item.quantity * 0.18); // Assuming 18% GST
+      totalGSTRefund += gstPerProduct;
+      
       item.status = 'cancelled';
       item.cancellationReason = 'Cancelled by admin';
       item.cancelledAt = new Date();
-      item.refundAmount = productRefundAmount;
+      item.refundAmount = productRefundAmount + gstPerProduct;
+      item.gstRefundAmount = gstPerProduct;
 
-      refundAmount += productRefundAmount;
+      refundAmount += productRefundAmount + gstPerProduct;
     }
 
+    // Update order details
     order.status = 'cancelled';
     order.totalPrice = 0;
     order.finalAmount = 0;
+    order.gstAmount -= totalGSTRefund;
     await order.save();
 
-    // Ensure admin wallet balance does not go below zero
+    // Handle Admin Wallet
     let adminWallet = await AdminWallet.findOne();
     if (!adminWallet) {
       adminWallet = new AdminWallet();
@@ -404,7 +407,7 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Process the refund
+    // Process Refund to User Wallet
     const wallet = await getOrCreateWallet(order.userId);
     await addWalletTransaction(
       order.userId,
@@ -414,6 +417,7 @@ const cancelOrder = async (req, res) => {
       order._id
     );
 
+    // Update Admin Wallet
     const adminTransaction = {
       user: order.userId,
       amount: refundAmount,
@@ -429,7 +433,7 @@ const cancelOrder = async (req, res) => {
 
     res.json({
       status: true,
-      message: "Order cancelled successfully"
+      message: "Order cancelled successfully and refund processed"
     });
   } catch (error) {
     console.log("cancel order error", error);
@@ -439,6 +443,7 @@ const cancelOrder = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -470,6 +475,9 @@ const getOrderDetails = async (req, res) => {
       return res.status(404).render('page-404', { message: 'Address not found' });
     }
 
+    // Calculate GST
+    const gstAmount = Math.round(order.totalPrice - (order.totalPrice / 1.18)); // Assuming totalPrice includes GST
+
     const orderDetails = {
       ...order._doc,
       userDetails: {
@@ -495,10 +503,10 @@ const getOrderDetails = async (req, res) => {
         status: item.status,
         product: item.product._id,
         returnReason: item.returnReason
-      }))
+      })),
+      gstAmount: gstAmount 
     }
 
-    
     res.render('order-details', {
       order: orderDetails,
       title: 'Order Details'
@@ -512,51 +520,76 @@ const getOrderDetails = async (req, res) => {
 
 
 
+const calculateRefundAmount = (order, item) => {
+  
+  const totalProductPrice = order.orderItems.reduce((sum, orderItem) => {
+    return sum + orderItem.price * orderItem.quantity;
+  }, 0);
+
+  
+  const discountPerProduct = Math.floor(
+    (order.discount / totalProductPrice) * (item.price * item.quantity)
+  );
+  const productRefundAmount = (item.price * item.quantity) - discountPerProduct;
+
+  
+  const gstPerProduct = Math.round(item.price * item.quantity * 0.18);
+
+  let refundAmount = productRefundAmount + gstPerProduct;
+
+  return refundAmount;
+};
+
 const updateReturnStatus = async (req, res) => {
   try {
     const { orderId, productId, status } = req.body;
 
     const validTransitions = {
-      'return_requested': ['processing', 'returned', 'delivered'],
-      'processing': ['returned', 'delivered'],
-      'returned': [],
-      'rejected': []
+      return_requested: ["processing", "returned", "delivered"],
+      processing: ["returned", "delivered"],
+      returned: [],
+      rejected: [],
     };
 
     const order = await Order.findOne({ orderId: orderId });
     if (!order) {
-      return res.json({ status: false, message: 'Order not found' });
+      return res.json({ status: false, message: "Order not found" });
     }
 
-    const itemIndex = order.orderItems.findIndex(item => item.product.toString() === productId);
+    const itemIndex = order.orderItems.findIndex(
+      (item) => item.product.toString() === productId
+    );
     if (itemIndex === -1) {
-      return res.json({ status: false, message: 'Product not found in order' });
+      return res.json({
+        status: false,
+        message: "Product not found in order",
+      });
     }
 
     const currentStatus = order.orderItems[itemIndex].status;
     if (!validTransitions[currentStatus]?.includes(status)) {
-      return res.json({ 
-        status: false, 
-        message: `Cannot update return status from '${currentStatus}' to '${status}'. Invalid status transition.` 
+      return res.json({
+        status: false,
+        message: `Cannot update return status from '${currentStatus}' to '${status}'. Invalid status transition.`,
       });
     }
 
     order.orderItems[itemIndex].status = status;
 
-    if (status === 'returned') {
-      const totalProductPrice = order.orderItems.reduce((sum, item) => {
-        return sum + item.price * item.quantity;
-      }, 0);
+    if (status === "returned") {
+      const refundAmount = calculateRefundAmount(
+        order,
+        order.orderItems[itemIndex]
+      );
 
-      const discountPerProduct = Math.floor((order.discount / totalProductPrice) * (order.orderItems[itemIndex].price * order.orderItems[itemIndex].quantity));
-      const refundAmount = (order.orderItems[itemIndex].price * order.orderItems[itemIndex].quantity) - discountPerProduct;
-
-      order.orderItems[itemIndex].refundStatus = 'completed';
+      order.orderItems[itemIndex].refundStatus = "processing";
       order.orderItems[itemIndex].refundAmount = refundAmount;
 
       order.finalAmount -= refundAmount;
 
-      const product = await Product.findById(order.orderItems[itemIndex].product);
+      const product = await Product.findById(
+        order.orderItems[itemIndex].product
+      );
       if (product) {
         product.quantity += order.orderItems[itemIndex].quantity;
         await product.save();
@@ -566,7 +599,7 @@ const updateReturnStatus = async (req, res) => {
       await addWalletTransaction(
         order.userId,
         refundAmount,
-        'credit',
+        "credit",
         `Refund for returned product in order #${order._id}`,
         order._id
       );
@@ -577,17 +610,24 @@ const updateReturnStatus = async (req, res) => {
       }
 
       if (adminWallet.balance < refundAmount) {
-        console.error("Admin wallet balance is insufficient to process the refund for order #", order._id);
-        return res.json({ status: false, message: "Admin wallet balance is insufficient to process the refund" });
+        console.error(
+          "Admin wallet balance is insufficient to process the refund for order #",
+          order._id
+        );
+        return res.json({
+          status: false,
+          message:
+            "Admin wallet balance is insufficient to process the refund",
+        });
       }
 
       const adminTransaction = {
         user: order.userId,
         amount: refundAmount,
-        type: 'debit',
+        type: "debit",
         description: `Refund for returned product in order #${order._id}`,
         orderId: order._id,
-        status: 'completed'
+        status: "completed",
       };
 
       adminWallet.transactions.push(adminTransaction);
@@ -597,19 +637,18 @@ const updateReturnStatus = async (req, res) => {
 
     await order.save();
 
-    res.json({ 
-      status: true, 
-      message: 'Return status updated successfully' 
+    res.json({
+      status: true,
+      message: "Return status updated successfully",
     });
   } catch (error) {
     console.log("Update return status error", error);
-    res.json({ 
-      status: false, 
-      message: 'An error occurred while updating return status' 
+    res.json({
+      status: false,
+      message: "An error occurred while updating return status",
     });
   }
 };
-
 
 
 module.exports = {
@@ -620,4 +659,4 @@ module.exports = {
   cancelOrder,
   getOrderDetails,
   updateReturnStatus
-};
+}

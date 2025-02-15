@@ -236,7 +236,9 @@
                   <%= order.status %>
                 </span>
               </div>
-              <a href="/orders/<%= order.orderId %>/invoice" class="btn btn-primary mt-3">Download Invoice</a>
+              <%if(order.status=='delivered'){%>
+                <a href="/orders/<%= order.orderId %>/invoice" class="btn btn-primary mt-3">Download Invoice</a>
+                <%}%>
             </div>
   
             <!-- Order Items -->
@@ -309,34 +311,38 @@
   
         <!-- Right Column -->
         <div class="col-lg-4">
-          <!-- Price Summary -->
-          <div class="order-info-card">
-            <h6 class="mb-3">Price Details</h6>
-            <div class="price-details">
+         <!-- Price Summary -->
+        <div class="order-info-card">
+          <h6 class="mb-3">Price Details</h6>
+          <div class="price-details">
               <div class="price-row">
-                <span>Total Price</span>
-                <span>₹<%= order.totalPrice %></span>
+                  <span>Total Price</span>
+                  <span>₹<%= order.totalPrice %></span>
               </div>
               <% if(order.discount > 0) { %>
-                <div class="price-row">
-                  <span>Discount</span>
-                  <span>-₹<%= order.discount %></span>
-                </div>
+                  <div class="price-row">
+                      <span>Discount</span>
+                      <span>-₹<%= order.discount %></span>
+                  </div>
               <% } %>
               <div class="price-row">
-                <span>Delivery Charges</span>
-                <%if(order.finalAmount !=0){%>
-                <span>₹49</span>
-                <%}else{%>
-                  <span>₹0</span>
-                <%}%>
+                  <span>Delivery Charges</span>
+                  <% if(order.finalAmount != 0) { %>
+                      <span>₹49</span>
+                  <% } else { %>
+                      <span>₹0</span>
+                  <% } %>
               </div>
               <div class="price-row">
-                <strong>Total Amount</strong>
-                <strong>₹<%= order.finalAmount %></strong>
+                  <span>GST (18%):</span>
+                  <span>₹<%= Math.round(order.totalPrice - (order.totalPrice / 1.18)) %></span>
               </div>
-            </div>
+              <div class="price-row">
+                  <strong>Total Amount</strong>
+                  <strong>₹<%= order.finalAmount %></strong>
+              </div>
           </div>
+        </div>
   
           <!-- Order Timeline -->
           <div class="order-info-card">
@@ -363,6 +369,8 @@
               <% }) %>
             </div>
           </div>
+
+          
         </div>
       </div>
     </div>
@@ -379,58 +387,58 @@
       cancelSection.style.display = cancelSection.style.display === 'none' ? 'block' : 'none';
     }
   
-    function submitCancellation(orderId, productId) {
-      const cancelReason = document.getElementById(`cancelReason_${productId}`).value;
-      const isReturn = '<%= order.status.toLowerCase() %>' === 'delivered';
-      
-      if (!cancelReason) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Missing Reason',
-          text: `Please enter a reason for ${isReturn ? 'return' : 'cancellation'}.`,
-        });
-        return;
-      }
-      
-      const endpoint = isReturn ? `/orders/${orderId}/return-item` : `/orders/${orderId}/cancel-item`;
-      
-      fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: productId,
-          reason: cancelReason
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: `Item ${isReturn ? 'return requested' : 'cancelled'} successfully!`,
-          }).then(() => {
-            window.location.reload();
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Failed',
-            text: `Failed to ${isReturn ? 'return' : 'cancel'} item. Please try again.`,
-          });
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'An error occurred. Please try again.',
-        });
+  function submitCancellation(orderId, productId) {
+  const cancelReason = document.getElementById(`cancelReason_${productId}`).value;
+  const isReturn = '<%= order.status.toLowerCase() %>' === 'delivered';
+  
+  if (!cancelReason) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Missing Reason',
+      text: `Please enter a reason for ${isReturn ? 'return' : 'cancellation'}.`,
+    });
+    return;
+  }
+  
+  const endpoint = isReturn ? `/orders/${orderId}/return-item` : `/orders/${orderId}/cancel-item`;
+  
+  fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      productId: productId,
+      reason: cancelReason
+    }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: `Item ${isReturn ? 'return requested' : 'cancelled'} successfully!`,
+      }).then(() => {
+        window.location.reload();
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: data.message || `Failed to ${isReturn ? 'return' : 'cancel'} item. Please try again.`,
       });
     }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'An error occurred. Please try again.',
+    });
+  });
+}
   </script>
 
 </body>

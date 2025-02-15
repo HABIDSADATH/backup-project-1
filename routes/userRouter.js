@@ -81,10 +81,10 @@ router.get('/change-email',userAuth,profileController.changeEmail)
 router.post('/change-email',userAuth,profileController.changeEmailValid)
 router.post('/verify-email-otp',userAuth,profileController.verifyEmailOtp)
 
-router.get('/change-password',userAuth,profileController.changePassword)
-router.post('/change-password',userAuth,profileController.changePasswordValid)
-router.post('/verify-changepassword-otp',userAuth,profileController.verifychangePassOtp)
-router.put('/update-profile', userAuth, profileController.updateProfile)
+router.get('/change-password',profileController.changePassword)
+router.post('/change-password-valid',profileController.changePasswordValid)
+router.post('/verify-changepassword-otp',profileController.verifychangePassOtp)
+router.put('/update-profile', profileController.updateProfile)
 
 //address management
 router.get('/addAddress',userAuth,profileController.addAddress)
@@ -108,7 +108,7 @@ router.get('/removeFromWishlist',userAuth,wishlistController.removeProduct)
 
 //coupon management
 router.post('/apply-coupon',userAuth,checkoutController.applyCoupon)
-
+router.post('/remove-coupon',userAuth,checkoutController.removeCoupon)
 
 
 module.exports = router;
