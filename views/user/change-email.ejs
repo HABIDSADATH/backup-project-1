@@ -125,7 +125,7 @@
             <h5 class="mb-0">Change Email Address</h5>
           </div>
           <div class="card-body p-4">
-            <form id="emailChangeForm" action="/change-email" method="POST" onsubmit="return validateForm()">
+            <form id="emailChangeForm" onsubmit="submitForm(event)">
               <div class="mb-4">
                 <label for="newEmail" class="form-label">Enter your Email Address</label>
                 <input 
@@ -154,31 +154,59 @@
 </main>
 
 <script>
-function validateForm() {
-  const email = document.getElementById('newEmail').value;
-  const errorElement = document.getElementById('emailError');
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
-  if (!email) {
-    errorElement.style.display = 'block';
-    errorElement.textContent = 'Email address is required.';
-    return false;
-  }
-  
-  if (!emailPattern.test(email)) {
-    errorElement.style.display = 'block';
-    errorElement.textContent = 'Please enter a valid email address.';
-    return false;
-  }
-  
-  errorElement.style.display = 'none';
-  return true;
-}
+  function submitForm(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-// Clear error message when user starts typing
-document.getElementById('newEmail').addEventListener('input', function() {
-  document.getElementById('emailError').style.display = 'none';
-});
+    const email = document.getElementById('newEmail').value;
+    const errorElement = document.getElementById('emailError');
+
+    // Basic validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      errorElement.style.display = 'block';
+      errorElement.textContent = 'Email address is required.';
+      return;
+    }
+    
+    if (!emailPattern.test(email)) {
+      errorElement.style.display = 'block';
+      errorElement.textContent = 'Please enter a valid email address.';
+      return;
+    }
+
+    // If no validation errors, send AJAX request
+    fetch('/change-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.text(); // Use text() since the response is HTML
+        } else {
+          // If status is not 200, read the JSON error message
+          return response.json().then((data) => {
+            throw new Error(data.message);
+          });
+        }
+      })
+      .then((html) => {
+        // Replace the current document's HTML with the new page content
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        errorElement.style.display = 'block';
+        errorElement.textContent = error.message;
+      });
+  }
 </script>
+
+
+
 
 <%- include("../../views/partials/user/footer") %>

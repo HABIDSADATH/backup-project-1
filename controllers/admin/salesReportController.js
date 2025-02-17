@@ -9,11 +9,11 @@ const getSalesReport = async (req, res) => {
     try {
       const { startDate, endDate, reportType } = req.query;
       const page = parseInt(req.query.page) || 1;
-      const limit = 4; // Adjust limit as needed
+      const limit = 4; 
       let query = {};
       let dateRange = {};
   
-      // Your existing date range logic
+      
       switch (reportType) {
         case 'daily':
           dateRange = {
@@ -57,19 +57,19 @@ const getSalesReport = async (req, res) => {
           $gte: dateRange.startDate,
           $lte: dateRange.endDate
         },
-        status: { $nin: ['cancelled'] }
+        status: 'delivered'
       };
   
-      // Get total count for pagination
+      
       const totalOrders = await Order.countDocuments(query);
   
-      // Get paginated orders
+      
       const orders = await Order.find(query)
         .sort({ createdOn: -1 })
         .skip((page - 1) * limit)
         .limit(limit);
   
-      // Calculate totals from all orders (not just paginated ones)
+      
       const allOrders = await Order.find(query);
       const reportData = {
         totalOrders: allOrders.length,
@@ -81,7 +81,7 @@ const getSalesReport = async (req, res) => {
           }
           return sum;
         }, 0),
-        // Paginated orders for display
+        
         orders: orders.map(order => ({
           orderId: order.orderId,
           date: order.createdOn,

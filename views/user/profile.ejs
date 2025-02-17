@@ -938,6 +938,28 @@ document.getElementById('editProfileForm').addEventListener('submit', async (e) 
       });
     });
   }
+
+
+  function copyReferralLink() {
+  // Get the referral link input element
+  const referralLinkInput = document.getElementById('referralLink');
+  
+  // Select the text inside the input
+  referralLinkInput.select();
+  referralLinkInput.setSelectionRange(0, 99999); // For mobile devices
+
+  // Copy the selected text to the clipboard
+  document.execCommand('copy');
+
+  // Show SweetAlert confirmation
+  Swal.fire({
+    icon: 'success',
+    title: 'Copied!',
+    text: 'Referral link copied to clipboard.',
+    confirmButtonColor: '#f7444e',
+    timer: 1500 // Auto-close after 1.5 seconds
+  });
+}
 </script>
   
 

@@ -52,16 +52,21 @@ const loadDashboard = async (req, res) => {
     try {
       
       const totalOrders = await Order.countDocuments();
-      const totalRevenue = await Order.aggregate([
-        { $match: { status: { $nin: ['cancelled', 'returned'] } } },
-        { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+    
+      const totalRevenueResult = await Order.aggregate([
+        { $unwind: "$orderItems" },
+        { $match: { "orderItems.status": "delivered" } },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: {
+              $sum: { $multiply: ["$orderItems.price", "$orderItems.quantity"] }
+            }
+          }
+        }
       ]);
 
-      // const adminWallet = await AdminWallet.findOne();
-      // console.log('admin wallet is ',adminWallet.balance)
-      // const totalRevenue = adminWallet.balance ? adminWallet.balance : 0;
-
-      
+      const totalRevenue = totalRevenueResult[0]?.totalRevenue || 0;
 
       
       const monthlyRevenue = await Order.aggregate([

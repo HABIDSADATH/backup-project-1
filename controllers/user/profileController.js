@@ -252,10 +252,11 @@ const changeEmail = async (req,res)=>{
   }
 }
 
+
 const changeEmailValid = async (req, res) => {
   try {
     const userData = await User.findById(req.session.user);
-    const { email } = req.body; 
+    const email = req.body.email;
 
     const userExist = await User.findOne({ email });
     if (userExist) {
@@ -274,22 +275,26 @@ const changeEmailValid = async (req, res) => {
         success: false,
         message: 'Failed to send email. Please try again later.'
       });
-
     } else {
       req.session.userOtp = otp;
       req.session.newEmail = email;
 
-      res.render('change-email-otp', { user: userData, otp: otp })
       
+      return res.render('change-email-otp', { 
+        user: userData, 
+        otp: otp 
+      });
     }
   } catch (error) {
     console.log('Change email error:', error);
     return res.status(500).json({
       success: false,
-      message: 'An error occurred'
+      message: 'An error occurred. Please try again later.'
     });
   }
 };
+
+
 
 const verifyEmailOtp = async (req, res) => {
   try {
