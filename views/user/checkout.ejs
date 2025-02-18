@@ -452,6 +452,7 @@ function handleCheckout() {
         discountAmount: discountAmount,
         couponCode: document.getElementById('couponSelect').value
     };
+    console.log('chec')
 
     fetch('/placeOrder', {
         method: 'POST',
@@ -472,7 +473,7 @@ function handleCheckout() {
                     name: 'Your Store Name',
                     description: 'Payment for your order',
                     handler: function (response) {
-                        // Payment Success
+                        
                         fetch('/verify-payment', {
                             method: 'POST',
                             headers: {
@@ -642,7 +643,8 @@ function removeCoupon() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        // body: JSON.stringify({couponCode:couponCode})
     })
     .then(response => {
         if (!response.ok) {
@@ -651,9 +653,12 @@ function removeCoupon() {
         return response.json();
     })
     .then(data => {
+        console.log('data',data)
         if (data.success) {
             
             document.getElementById('discountRow').style.display = 'none';
+
+
 
             
             const subtotal = parseFloat(document.getElementById('subTotalId').textContent.replace(/[₹,]/g, '').trim());
@@ -666,6 +671,8 @@ function removeCoupon() {
 
             
             const finalAmount = subtotal + gst + shipping;
+            document.getElementById('discountAmount').textContent=0
+
 
             
             document.getElementById('finalAmountId').textContent = `₹${finalAmount.toLocaleString()}`;
@@ -711,12 +718,12 @@ function removeCoupon() {
     document.getElementById('addAddressForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    // Clear previous error messages
+    
     document.querySelectorAll('.error-message').forEach(function (element) {
         element.innerText = '';
     });
 
-    // Get form values
+    
     const name = document.getElementById('name').value.trim();
     const phone = document.getElementById('phone').value.trim();
     const altPhone = document.getElementById('altPhone').value.trim();
@@ -728,7 +735,7 @@ function removeCoupon() {
 
     let isValid = true;
 
-    // Validation rules
+    
     if (!name) {
         document.getElementById('nameError').innerText = 'Name is required.';
         isValid = false;

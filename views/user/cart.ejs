@@ -191,10 +191,11 @@
                             <span>total :</span>
                             <span>₹ <%=subTotal%></span>
                         </div>
-                        
+                        <%if(cartItems.length>0){%>
                         <a class="checkout-btn" href='/checkout'>
                             Proceed to Checkout
                         </a>
+                        <%}%>
                     </div>
                 </div>
             </div>

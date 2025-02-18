@@ -53,24 +53,21 @@ app.use('/admin', adminRouter);
 
 
 
-app.use((req, res) => {
-  res.status(404).render('page-404'); 
-});
+// app.use((req, res) => {
+//   res.status(404).render('page-404'); 
+// });
 
 
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  console.log('Requested URL:', req.originalUrl);
-
-  if (req.originalUrl.startsWith('/admin')) {
-    console.log('Admin Error Page');
-    res.status(500).render('error', { redirectUrl: '/admin/' });
-  } else {
-    console.log('User Error Page');
-    res.status(500).render('error', { redirectUrl: '/' });
-  }
-});
-
+app.use((req, res, next) => {
+    const isAdminRoute = req.originalUrl.startsWith('/admin');
+    const redirectUrl = isAdminRoute ? '/admin/' : '/'; 
+    
+    res.status(404).render(isAdminRoute ? "admin-error" : "page-404", { 
+        title: "Page Not Found", 
+        message: "The page you are looking for does not exist.",
+        status: 404,
+    })
+})
 
 
 

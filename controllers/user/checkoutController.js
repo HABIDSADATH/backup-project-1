@@ -169,14 +169,15 @@ const removeCoupon = async (req, res) => {
               message: 'Cart not found'
           });
       }
-
-      
+     
       cart.appliedCoupon = null;  
+      cart.discountAmount = 0;
+
       await cart.save();
 
       return res.status(200).json({
           success: true,
-          message: 'Coupon removed successfully'
+          message: 'Coupon removed successfully',
       });
 
   } catch (error) {
@@ -187,6 +188,7 @@ const removeCoupon = async (req, res) => {
       });
   }
 };
+
 
 const addAddress = async (req, res) => {
   try {
