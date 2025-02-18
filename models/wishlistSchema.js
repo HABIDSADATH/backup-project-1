@@ -1,4 +1,4 @@
-const mongoose=requi re('mongoose');
+const mongoose= require ('mongoose');
 const { schema } = require('./userSchema');
 const {Schema}=mongoose;
 

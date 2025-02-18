@@ -139,6 +139,12 @@
     border-radius: 8px;
     padding: 15px;
   }
+
+  .upload-btn {
+    margin-top: 10px;
+    z-index: 10;
+    position: relative;
+}
 </style>
 
 <div class="content">
@@ -153,14 +159,14 @@
         <div id="productName-error" class="error-message"></div>
       </div>
 
-      <!-- Description -->
+      
       <div class="form-section">
         <label class="form-label">Description</label>
         <textarea name="description" class="form-control" rows="4" placeholder="Enter banner description"></textarea>
         <div id="description" class="error-message"></div>
       </div>
 
-      <!-- Dates -->
+      
       <div class="row">
         <div class="col-md-6 form-section">
           <label class="form-label">Start Date</label>
@@ -174,35 +180,40 @@
         </div>
       </div>
 
-      <!-- Link -->
+      
       <div class="form-section">
         <label class="form-label">Link</label>
         <input type="text" name="link" class="form-control" placeholder="Enter banner link">
         <div id="link-error" class="error-message"></div>
       </div>
 
-      <!-- Image Upload -->
+      
       <div class="form-section">
         <label class="form-label">Banner Image</label>
-        <div class="img-area" onclick="document.getElementById('inputFile').click()">
+        
+        <div class="img-area">
           <img src="" alt="" id="imgView1" class="img-preview">
+          <!-- Add a separate button for file upload -->
+          <button type="button" class="btn btn-primary upload-btn" onclick="document.getElementById('inputFile').click()">
+              Choose Image
+          </button>
           <input type="file" name="images" id="inputFile" class="d-none" 
-                 accept="image/png, image/jpeg, image/jpg"
-                 onchange="viewImage1(event),viewImage(event, 1)">
+                accept="image/png, image/jpeg, image/jpg"
+                onchange="viewImage1(event),viewImage(event, 1)">
         </div>
         <div id="image-error" class="error-message"></div>
         
-        <!-- Image Cropper -->
+        
         <div class="image-cropper" style="display:none">
           <img src="" id="croppedImg1" alt="">
           <button type="button" id="saveButton1" class="btn btn-primary mt-2">Save Crop</button>
         </div>
       </div>
 
-      <!-- Thumbnails -->
+      
       <div class="thumbnails-container" id="addedImagesContainer"></div>
 
-      <!-- Submit Button -->
+      
       <div class="button-container">
         <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">
           Publish Banner

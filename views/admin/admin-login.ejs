@@ -99,11 +99,11 @@
         
         <form id="adminLoginForm" action="/admin/login" method="post">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="famms@gmail.com">
+            <input type="email" id="email" name="email" >
             <div id="error1" class="error-message"></div>
 
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" value="h1111111">
+            <input type="password" id="password" name="password">
             <div id="error2" class="error-message"></div>
 
             <% if (locals.message) { %>

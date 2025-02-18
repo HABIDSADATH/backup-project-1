@@ -113,46 +113,24 @@
 <div class="content">
   <h3 class="page-title">Order Management</h3>
 
-  <!-- Metrics Section -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-3">
-      <div class="card metrics-card">
-        <div class="metric-value">₹<%= metrics.totalRevenue.toLocaleString() %></div>
-        <div class="metric-label">Total Revenue</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card metrics-card">
-        <div class="metric-value"><%= metrics.totalOrders %></div>
-        <div class="metric-label">Total Orders</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card metrics-card">
-        <div class="metric-value">₹<%= metrics.averageOrderValue.toFixed(2) %></div>
-        <div class="metric-label">Average Order Value</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Filter Section -->
-  <!-- <div class="filter-section">
+  <div class="filter-section">
     <div class="row g-3">
       <div class="col-md-3">
         <select class="form-select" id="statusFilter">
           <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Cancelled">Cancelled</option>
+          <option value="pending" <%= filters?.status === 'pending' ? 'selected' : '' %>>Pending</option>
+          <option value="processing" <%= filters?.status === 'processing' ? 'selected' : '' %>>Processing</option>
+          <option value="shipped" <%= filters?.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+          <option value="delivered" <%= filters?.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+          <option value="cancelled" <%= filters?.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
         </select>
       </div>
       <div class="col-md-3">
-        <input type="date" class="form-control" id="startDate">
+        <input type="date" class="form-control" id="startDate" value="<%= filters?.startDate || '' %>">
       </div>
       <div class="col-md-3">
-        <input type="date" class="form-control" id="endDate">
+        <input type="date" class="form-control" id="endDate" value="<%= filters?.endDate || '' %>">
       </div>
       <div class="col-md-3">
         <button onclick="applyFilters()" class="btn btn-primary w-100">
@@ -160,7 +138,7 @@
         </button>
       </div>
     </div>
-  </div> -->
+  </div>
 
   
   <div class="table-card">
@@ -335,11 +313,35 @@ function applyFilters() {
   const startDate = document.getElementById('startDate').value;
   const endDate = document.getElementById('endDate').value;
 
-  let url = '/admin/orders/filter?';
-  if (status) url += `status=${status}&`;
-  if (startDate) url += `startDate=${startDate}&`;
-  if (endDate) url += `endDate=${endDate}`;
+  let url = new URL(window.location.href);
+  url.searchParams.delete('page'); // Reset to first page when filtering
 
-  window.location.href = url;
+  if (status) url.searchParams.set('status', status);
+  if (startDate) url.searchParams.set('startDate', startDate);
+  if (endDate) url.searchParams.set('endDate', endDate);
+
+  window.location.href = url.toString();
 }
+
+// Update pagination links to maintain filters
+document.addEventListener('DOMContentLoaded', function() {
+  const status = new URLSearchParams(window.location.search).get('status');
+  const startDate = new URLSearchParams(window.location.search).get('startDate');
+  const endDate = new URLSearchParams(window.location.search).get('endDate');
+
+  // Set initial filter values
+  if (status) document.getElementById('statusFilter').value = status;
+  if (startDate) document.getElementById('startDate').value = startDate;
+  if (endDate) document.getElementById('endDate').value = endDate;
+
+  // Update pagination links
+  const paginationLinks = document.querySelectorAll('.pagination-container a');
+  paginationLinks.forEach(link => {
+    const url = new URL(link.href);
+    if (status) url.searchParams.set('status', status);
+    if (startDate) url.searchParams.set('startDate', startDate);
+    if (endDate) url.searchParams.set('endDate', endDate);
+    link.href = url.toString();
+  });
+});
 </script>

@@ -200,36 +200,6 @@ async function securePassword(password) {
   }
 }
 
-// const verifyOtp = async (req,res)=>{
-//   try {
-
-//     const {otp} = req.body
-//     console.log(otp)
-
-//     if(otp === req.session.userOtp){
-//       const user = req.session.userData
-//       const passwordHash = await securePassword(user.password)
-
-//       const saveUserData = new User({
-//         name:user.name,
-//         phone:user.phone,
-//         email:user.email,
-//         password:passwordHash
-//       })
-//       await saveUserData.save()
-//       req.session.user = saveUserData._id;
-//       res.json({success:true,redirectUrl:"/"})
-//     }else{
-//       res.status(400).json({success:false,message:"Invalid otp, Please try again"})
-//     }
-    
-//   } catch (error) {
-
-//     console.error("error verifying otp",error)
-//     res.status(500).json({success:false,message:"an error occurred"})
-    
-//   }
-// }
 
 const verifyOtp = async (req, res) => {
   try {

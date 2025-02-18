@@ -123,6 +123,8 @@ const getAllProducts = async (req, res) => {
 }
 
 
+
+
 const addProductOffer = async (req, res) => {
   try {
     const { productId, percentage } = req.body;
@@ -145,10 +147,10 @@ const addProductOffer = async (req, res) => {
     }
 
     
-    if (findCategory.categoryOffer > percentage) {
+    if (findCategory.categoryOffer > 0) {
       return res.json({
         status: false,
-        message: 'This product category already has a category offer greater than the given percentage',
+        message: 'Cannot add a product offer because a category offer already exists.',
       });
     }
 
@@ -164,10 +166,6 @@ const addProductOffer = async (req, res) => {
     findProduct.salePrice = newSalePrice;
     findProduct.productOffer = parseInt(percentage);
     await findProduct.save();
-
-    
-    findCategory.categoryOffer = 0;
-    await findCategory.save();
 
     return res.json({ status: true });
   } catch (error) {

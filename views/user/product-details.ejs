@@ -424,7 +424,7 @@ function addToCartButton(productId) {
 
     console.log("data is there or not", data);
 
-    fetch("http://localhost:3000/addToCart", {
+    fetch("/addToCart", {
         method: "POST",            
         headers: {
             "Content-Type": "application/json"  

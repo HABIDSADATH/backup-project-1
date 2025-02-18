@@ -8,13 +8,143 @@ const Wallet = require('../../models/walletSchema')
 const Address = require('../../models/addressSchema');
 const { getOrCreateWallet,addWalletTransaction,processRefund } = require('../../utils/walletUtils')
 const AdminWallet = require('../../models/adminWalletTransactionSchema');
+
+// const orderInfo = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = 10;
+//     const skip = (page - 1) * limit;
+
+//     const orderData = await Order.aggregate([
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "userId",
+//           foreignField: "_id",
+//           as: "userDetails"
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: "addresses",
+//           localField: "address",
+//           foreignField: "_id",
+//           as: "addressDetails"
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: "$orderItems",
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: "products",
+//           localField: "orderItems.product",
+//           foreignField: "_id",
+//           as: "orderItems.productDetails"
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: "$orderItems.productDetails",
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: "$_id",
+//           userId: { $first: "$userId" },
+//           userDetails: { $first: { $arrayElemAt: ["$userDetails", 0] } },
+//           addressDetails: { $first: { $arrayElemAt: ["$addressDetails", 0] } },
+//           orderItems: {
+//             $push: {
+//               product: "$orderItems.product",
+//               productDetails: "$orderItems.productDetails",
+//               quantity: "$orderItems.quantity",
+//               price: "$orderItems.price"
+//             }
+//           },
+//           totalPrice: { $first: "$totalPrice" },
+//           discount: { $first: "$discount" },
+//           finalAmount: { $first: "$finalAmount" },
+//           status: { $first: "$status" },
+//           createdOn: { $first: "$createdOn" },
+//           orderId: { $first: "$orderId" },
+//           paymentMethod: { $first: "$paymentMethod" },
+//           return: { $first: "$return" }
+//         }
+//       },
+//       { $sort: { createdOn: -1 } },
+//       { $skip: skip },
+//       { $limit: limit }
+//     ]);
+
+    
+
+//     const totalOrders = await Order.countDocuments();
+//     const totalPages = Math.ceil(totalOrders / limit);
+
+//     const metrics = await Order.aggregate([
+//       {
+//         $group: {
+//           _id: null,
+//           totalRevenue: { $sum: '$finalAmount' },
+//           totalOrders: { $sum: 1 },
+//           averageOrderValue: { $avg: '$finalAmount' }
+//         }
+//       }
+//     ]);
+
+//     res.render("orders", {
+//       orders: orderData,
+//       currentPage: page,
+//       totalPages: totalPages,
+//       totalOrders: totalOrders,
+//       metrics: metrics[0] || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 }
+//     });
+//   } catch (error) {
+//     console.log("order controller error", error);
+//     res.redirect("/admin/pageerror");
+//   }
+// };
+
+
 const orderInfo = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const orderData = await Order.aggregate([
+    // Get filter parameters
+    const status = req.query.status;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    // Build match conditions for filtering
+    let matchConditions = {};
+
+    if (status) {
+      matchConditions.status = status;
+    }
+
+    if (startDate || endDate) {
+      matchConditions.createdOn = {};
+      if (startDate) {
+        matchConditions.createdOn.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Add one day to include the end date fully
+        const endDateTime = new Date(endDate);
+        endDateTime.setDate(endDateTime.getDate() + 1);
+        matchConditions.createdOn.$lte = endDateTime;
+      }
+    }
+
+    const aggregatePipeline = [
+      // Add match stage if there are any filters
+      ...(Object.keys(matchConditions).length > 0 ? [{ $match: matchConditions }] : []),
       {
         $lookup: {
           from: "users",
@@ -78,14 +208,24 @@ const orderInfo = async (req, res) => {
       { $sort: { createdOn: -1 } },
       { $skip: skip },
       { $limit: limit }
+    ];
+
+    const orderData = await Order.aggregate(aggregatePipeline);
+
+    // Count total filtered orders
+    const totalFilteredOrders = await Order.aggregate([
+      ...(Object.keys(matchConditions).length > 0 ? [{ $match: matchConditions }] : []),
+      {
+        $count: "total"
+      }
     ]);
 
-    
-
-    const totalOrders = await Order.countDocuments();
+    const totalOrders = totalFilteredOrders.length > 0 ? totalFilteredOrders[0].total : 0;
     const totalPages = Math.ceil(totalOrders / limit);
 
+    // Calculate metrics based on filtered data
     const metrics = await Order.aggregate([
+      ...(Object.keys(matchConditions).length > 0 ? [{ $match: matchConditions }] : []),
       {
         $group: {
           _id: null,
@@ -101,14 +241,18 @@ const orderInfo = async (req, res) => {
       currentPage: page,
       totalPages: totalPages,
       totalOrders: totalOrders,
-      metrics: metrics[0] || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 }
+      metrics: metrics[0] || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 },
+      filters: {
+        status,
+        startDate,
+        endDate
+      }
     });
   } catch (error) {
     console.log("order controller error", error);
     res.redirect("/admin/pageerror");
   }
 };
-
 
 
 const updateOrderStatus = async (req, res) => {
