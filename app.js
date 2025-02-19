@@ -52,15 +52,15 @@ app.use('/admin', adminRouter);
 
 
 
-app.use((req, res, next) => {
-  res.status(404);
-  const isAdminRoute = req.originalUrl.startsWith('/admin');
-  res.render(isAdminRoute ? "admin-error" : "page-404", { 
-      title: "Page Not Found", 
-      message: "The page you are looking for does not exist.",
-      status: 404,
-  });
-});
+// app.use((req, res, next) => {
+//   res.status(404);
+//   const isAdminRoute = req.originalUrl.startsWith('/admin');
+//   res.render(isAdminRoute ? "admin-error" : "page-404", { 
+//       title: "Page Not Found", 
+//       message: "The page you are looking for does not exist.",
+//       status: 404,
+//   });
+// });
 
 // General Error Handling Middleware
 app.use((err, req, res, next) => {
