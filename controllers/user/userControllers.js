@@ -8,7 +8,8 @@ const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt')
 const { getOrCreateWallet, addWalletTransaction } = require('../../utils/walletUtils') 
-const { v4: uuidv4 } = require('uuid'); 
+const { v4: uuidv4 } = require('uuid');
+
 
 const loadHomePage = async (req, res) => {
   try {
@@ -119,7 +120,6 @@ async function sendVarificationEmail(email,otp) {
 }
 
 
-
 const signup = async (req, res) => {
   try {
     const { name, phone, email, password, cPassword, referralCode } = req.body;
@@ -171,46 +171,44 @@ async function securePassword(password) {
 }
 
 
-
-
 const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
     console.log(otp);
+    const googleId = uuidv4();
 
     if (otp === req.session.userOtp) {
       const user = req.session.userData;
       const passwordHash = await securePassword(user.password);
 
-      
-      const googleId = uuidv4(); 
-
-      const newUser  = new User({
+      const newUser = new User({
         name: user.name,
         phone: user.phone,
         email: user.email,
+        googleId:googleId,
         password: passwordHash,
-        googleId: googleId, // Set the generated googleId
         referralCode: user.referralCode
       });
 
-      await newUser .save();
+      await newUser.save();
 
       if (user.referrerId) {
         const referrer = await User.findById(user.referrerId);
-        referrer.redeemedUsers.push(newUser ._id);
+        referrer.redeemedUsers.push(newUser._id);
         await referrer.save();
 
+        
         await addWalletTransaction(
           referrer._id,
           100,
           'credit',
-          `Referral bonus for referring ${newUser .name}`,
+          `Referral bonus for referring ${newUser.name}`,
           null
         );
 
+        
         await addWalletTransaction(
-          newUser ._id,
+          newUser._id,
           50,
           'credit',
           'Referral bonus on sign-up',
@@ -218,7 +216,7 @@ const verifyOtp = async (req, res) => {
         );
       }
 
-      req.session.user = newUser ._id;
+      req.session.user = newUser._id;
       res.json({ success: true, redirectUrl: "/" });
     } else {
       res.status(400).json({ success: false, message: "Invalid OTP, Please try again" });
