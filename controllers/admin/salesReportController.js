@@ -57,8 +57,9 @@ const getSalesReport = async (req, res) => {
           $gte: dateRange.startDate,
           $lte: dateRange.endDate
         },
-        status: 'delivered'
+        status: { $nin: ['cancelled'] }
       };
+      
   
       
       const totalOrders = await Order.countDocuments(query);

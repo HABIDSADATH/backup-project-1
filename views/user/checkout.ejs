@@ -701,19 +701,19 @@ function removeCoupon() {
 }
 
 
-    function toggleAddressForm(show) {
-        const addressSection = document.querySelector('.add-address-section');
-        addressSection.style.display = show ? 'block' : 'none';
+function toggleAddressForm(show) {
+    const addressSection = document.querySelector('.add-address-section');
+    addressSection.style.display = show ? 'block' : 'none';
 
-        if (show) {
-            addressSection.scrollIntoView({ behavior: 'smooth' });
-        }
+    if (show) {
+        addressSection.scrollIntoView({ behavior: 'smooth' });
     }
+}
 
-    document.querySelector('.add-address-btn').onclick = function(e) {
-        e.preventDefault();
-        toggleAddressForm(true);
-    };
+document.querySelector('.add-address-btn').onclick = function(e) {
+    e.preventDefault();
+    toggleAddressForm(true);
+};
 
 document.getElementById('addAddressForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -723,7 +723,7 @@ document.getElementById('addAddressForm').addEventListener('submit', function (e
         element.innerText = '';
     });
 
-    
+   
     const name = document.getElementById('name').value.trim();
     const phone = document.getElementById('phone').value.trim();
     const altPhone = document.getElementById('altPhone').value.trim();
@@ -740,41 +740,62 @@ document.getElementById('addAddressForm').addEventListener('submit', function (e
         document.getElementById('nameError').innerText = 'Name is required.';
         isValid = false;
     }
-    if (!phone || phone.length !== 10) {
-        document.getElementById('phoneError').innerText = 'Phone number must be 10 digits.';
-        isValid = false;
-    }
-    if (altPhone && altPhone.length !== 10) {
-        document.getElementById('altPhoneError').innerText = 'Alternate phone number must be 10 digits.';
-        isValid = false;
-    }
-    if (!addressType) {
-        document.getElementById('addressTypeError').innerText = 'Address type is required.';
-        isValid = false;
-    }
-    if (!state) {
-        document.getElementById('stateError').innerText = 'State is required.';
-        isValid = false;
-    }
-    if (!city) {
-        document.getElementById('cityError').innerText = 'City is required.';
-        isValid = false;
-    }
-    if (!landMark) {
-        document.getElementById('landMarkError').innerText = 'Landmark is required.';
-        isValid = false;
-    }
-    if (!pincode || pincode.length !== 6) {
-        document.getElementById('pincodeError').innerText = 'Pincode must be 6 digits.';
+
+    
+    const phoneRegex = /^\d{10}$/;
+    if (!phone || !phoneRegex.test(phone)) {
+        document.getElementById('phoneError').innerText = 'Valid 10-digit phone number is required.';
         isValid = false;
     }
 
     
+    if (altPhone && !phoneRegex.test(altPhone)) {
+        document.getElementById('altPhoneError').innerText = 'Alternate phone number must be 10 digits.';
+        isValid = false;
+    }
+
+    if (!addressType) {
+        document.getElementById('addressTypeError').innerText = 'Address type is required.';
+        isValid = false;
+    }
+
+    if (!state) {
+        document.getElementById('stateError').innerText = 'State is required.';
+        isValid = false;
+    }
+
+    if (!city) {
+        document.getElementById('cityError').innerText = 'City is required.';
+        isValid = false;
+    }
+
+    if (!landMark) {
+        document.getElementById('landMarkError').innerText = 'Landmark is required.';
+        isValid = false;
+    }
+
+    
+    const pincodeRegex = /^\d{6}$/;
+    if (!pincode || !pincodeRegex.test(pincode)) {
+        document.getElementById('pincodeError').innerText = 'Valid 6-digit pincode is required.';
+        isValid = false;
+    }
+
     if (isValid) {
         const formData = new FormData(this);
+        
+        
         const addressData = {
-            ...Object.fromEntries(formData.entries()),
-            pincode: Number(formData.get('pincode'))
+            address: [{
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                altPhone: formData.get('altPhone') || undefined, 
+                addressType: formData.get('addressType'),
+                state: formData.get('state'),
+                city: formData.get('city'),
+                landMark: formData.get('landMark'),
+                pincode: parseInt(formData.get('pincode'), 10) 
+            }]
         };
 
         const submitBtn = this.querySelector('button[type="submit"]');
@@ -789,7 +810,12 @@ document.getElementById('addAddressForm').addEventListener('submit', function (e
             },
             body: JSON.stringify(addressData)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => Promise.reject(data));
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 const addressList = document.querySelector('.address-list');
