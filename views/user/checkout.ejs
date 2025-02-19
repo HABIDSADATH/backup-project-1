@@ -715,7 +715,7 @@ function removeCoupon() {
         toggleAddressForm(true);
     };
 
-    document.getElementById('addAddressForm').addEventListener('submit', function (e) {
+document.getElementById('addAddressForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
     
@@ -772,7 +772,10 @@ function removeCoupon() {
     
     if (isValid) {
         const formData = new FormData(this);
-        const addressData = Object.fromEntries(formData.entries());
+        const addressData = {
+            ...Object.fromEntries(formData.entries()),
+            pincode: Number(formData.get('pincode'))
+        };
 
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
