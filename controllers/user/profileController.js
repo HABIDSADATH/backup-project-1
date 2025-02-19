@@ -558,7 +558,7 @@ const deleteAddress = async (req,res)=>{
 }
 
 const updateProfile = async (req, res) => {
-  console.log('hello update profile')
+  
   try {
       const userId = req.session.user
       console.log('userId:',userId)

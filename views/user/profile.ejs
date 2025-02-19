@@ -584,7 +584,7 @@
                   </div>
                 </div>
 
-                <!-- Wallet Status Tab -->
+                
                 <div class="tab-pane fade" id="track-orders">
                   <div class="card">
                     <div class="card-header">
@@ -602,7 +602,7 @@
                   </div>
                 </div>
 
-                <!-- Wallet History Tab -->
+                
                 <div class="tab-pane fade" id="wallet-history">
                   <div class="card">
                     <div class="card-header">
@@ -797,10 +797,12 @@
           <div class="mb-4">
             <label class="form-label">Name</label>
             <input type="text" name="name" id="name" class="form-control" value="<%=user.name%>">
+            <div class="error-message text-danger" id="nameError"></div> <!-- Placeholder for error message -->
           </div>
           <div class="mb-4">
             <label class="form-label">Phone</label>
             <input type="tel" name="phone" id="phone" class="form-control" value="<%=user.phone%>">
+            <div class="error-message text-danger" id="phoneError"></div> <!-- Placeholder for error message -->
           </div>
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -815,37 +817,61 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   const editModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
-const openEditModal = () => editModal.show();
+  const openEditModal = () => editModal.show();
 
-document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  console.log(Object.fromEntries(formData));
-  console.log(formData)
-  try {
-    const response = await fetch('http://localhost:3000/update-profile', {
-      method: 'PUT',
-      headers:{
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(Object.fromEntries(formData)
-    ) 
-    });
+  document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
     
-    if (response.ok) {
-      editModal.hide();
-      
-    } else {
-      
-      const errorData = await response.json();
-      console.error('Error:', errorData);
-    }
-  } catch (error) {
-    console.error('Network Error:', error);
-  }
-});
+    // Clear previous error messages
+    document.getElementById('nameError').innerText = '';
+    document.getElementById('phoneError').innerText = '';
 
-  </script>
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    // Validation flags
+    let hasError = false;
+
+    // Validate Name
+    if (!data.name || data.name.trim() === '') {
+      document.getElementById('nameError').innerText = 'Name is required.';
+      hasError = true;
+    }
+
+    // Validate Phone (required and must be exactly 10 digits)
+    const phoneRegex = /^\d{10}$/; // Regex for exactly 10 digits
+    if (!data.phone || !phoneRegex.test(data.phone)) {
+      document.getElementById('phoneError').innerText = 'Phone number is required and must be exactly 10 digits.';
+      hasError = true;
+    }
+
+    if (hasError) {
+      return; // Stop submission if there are validation errors
+    }
+
+    try {
+      const response = await fetch('update-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (response.ok) {
+        editModal.hide();
+        location.reload(); // Reload the page to show changes
+      } else {
+        const errorData = await response.json();
+        console.error('Error:', errorData);
+        alert('An error occurred while updating the profile. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      alert('A network error occurred. Please check your connection and try again.');
+    }
+  });
+</script>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
@@ -941,23 +967,23 @@ document.getElementById('editProfileForm').addEventListener('submit', async (e) 
 
 
   function copyReferralLink() {
-  // Get the referral link input element
+  
   const referralLinkInput = document.getElementById('referralLink');
   
-  // Select the text inside the input
+  
   referralLinkInput.select();
-  referralLinkInput.setSelectionRange(0, 99999); // For mobile devices
+  referralLinkInput.setSelectionRange(0, 99999); 
 
-  // Copy the selected text to the clipboard
+ 
   document.execCommand('copy');
 
-  // Show SweetAlert confirmation
+  
   Swal.fire({
     icon: 'success',
     title: 'Copied!',
     text: 'Referral link copied to clipboard.',
     confirmButtonColor: '#f7444e',
-    timer: 1500 // Auto-close after 1.5 seconds
+    timer: 1500 
   });
 }
 </script>
