@@ -175,7 +175,6 @@ const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
     console.log(otp);
-    const googleId = uuidv4();
 
     if (otp === req.session.userOtp) {
       const user = req.session.userData;
@@ -185,7 +184,6 @@ const verifyOtp = async (req, res) => {
         name: user.name,
         phone: user.phone,
         email: user.email,
-        googleId:googleId,
         password: passwordHash,
         referralCode: user.referralCode
       });
