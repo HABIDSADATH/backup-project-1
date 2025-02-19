@@ -196,6 +196,11 @@ const addAddress = async (req, res) => {
       const userData = await User.findOne({ _id: user });
       
       
+      
+      
+      const addressData = req.body.address[0];
+      
+      
       const { 
           addressType, 
           name, 
@@ -204,10 +209,9 @@ const addAddress = async (req, res) => {
           state, 
           phone, 
           altPhone 
-      } = req.body;
+      } = addressData;
       
-      
-      const pincode = Number(req.body.pincode);
+      const pincode = Number(addressData.pincode);
 
       
       if (!addressType || !name || !city || !landMark || !state || !pincode || !phone) {
@@ -234,7 +238,6 @@ const addAddress = async (req, res) => {
           });
       }
 
-      
       if (altPhone && !phoneRegex.test(altPhone)) {
           return res.status(400).json({
               success: false,
@@ -256,7 +259,7 @@ const addAddress = async (req, res) => {
                   state,
                   pincode,
                   phone,
-                  ...(altPhone && { altPhone }) 
+                  ...(altPhone && { altPhone })
               }]
           });
           await newAddress.save();
@@ -285,7 +288,6 @@ const addAddress = async (req, res) => {
   } catch (error) {
       console.log('Error adding address:', error);
       
-      
       if (error.name === 'ValidationError') {
           return res.status(400).json({
               success: false,
@@ -294,7 +296,6 @@ const addAddress = async (req, res) => {
           });
       }
 
-      
       res.status(500).json({
           success: false,
           message: 'Failed to add address'
