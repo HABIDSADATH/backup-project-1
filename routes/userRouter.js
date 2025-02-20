@@ -14,7 +14,7 @@ router.get('/pageNotFound',userController.pageNotFound)
 
 //sign up managemant
 router.get('/',userController.loadHomePage)
-router.get('/shop',userAuth,userController.loadShopingPage)
+router.get('/shop',userController.loadShopingPage)
 router.post('/applyFilters', userAuth, userController.applyFilters);
 
 

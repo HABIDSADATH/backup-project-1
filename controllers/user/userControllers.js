@@ -299,11 +299,12 @@ const logout = async (req,res)=>{
   }
 }
 
+
 const loadShopingPage = async (req, res) => {
   try {
-    const user = req.session.user;
-    const userData = await User.findOne({ _id: user });
-    
+    const user = req.session.user || null;
+    const userData = user ? await User.findOne({ _id: user }) : null; 
+
     const categories = await Category.find({ isListed: true });
     const categoryIds = categories.map(category => category._id);
 
@@ -317,25 +318,22 @@ const loadShopingPage = async (req, res) => {
       quantity: { $gt: 0 },
     }).sort({ createdOn: -1 }).skip(skip).limit(limit);
 
-    
-
     const totalProducts = await Product.countDocuments({
       isBlock: false,
       category: { $in: categoryIds },
       quantity: { $gt: 0 },
     });
 
-
     const totalPages = Math.ceil(totalProducts / limit);
-    const wishlist = userData.wishlist
-    const brands = await Brand.find({isBlocked:false}).lean();
+    const wishlist = userData ? userData.wishlist : []; 
+    const brands = await Brand.find({ isBlocked: false }).lean();
     const categoriesWithIds = categories.map(category => ({ _id: category._id, name: category.name }));
 
     res.render('shop', {
-      user: userData,
+      user: userData, 
       products: products,
       categories: categoriesWithIds,
-      brand: brands, 
+      brand: brands,
       totalProducts: totalProducts,
       currentPage: page,
       totalPages: totalPages,
@@ -346,7 +344,8 @@ const loadShopingPage = async (req, res) => {
     console.error('Error in loading shopping page:', error);
     res.redirect('/pageNotFound');
   }
-}
+};
+
 
 
 

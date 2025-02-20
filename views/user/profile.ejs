@@ -860,7 +860,7 @@
       
       if (response.ok) {
         editModal.hide();
-        location.reload(); // Reload the page to show changes
+        location.reload(); 
       } else {
         const errorData = await response.json();
         console.error('Error:', errorData);
